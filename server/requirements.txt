@@ -1,0 +1,4 @@
+aiopg>=0.7.0
+psycopg2>=2.6.1
+PyYAML>=3.11
+websockets>=2.6
