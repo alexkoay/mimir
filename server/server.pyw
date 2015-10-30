@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import sys
 import json
-import yaml
+import click
 import hashlib
 import decimal
 import time, datetime
@@ -11,67 +10,64 @@ import traceback
 import aiopg, psycopg2 as pg
 import asyncio, websockets as ws
 
-## encoder ###################################################################
+## encoder #####################################################################
 
 class Encoder(json.JSONEncoder):
     def __init__(self, **kwargs):
-        self.args = dict(kwargs)
-        if 'indent' in self.args:
-            del self.args['indent']
         super(Encoder, self).__init__(**kwargs)
 
     def default(self, obj):
-        if isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        elif isinstance(obj, datetime.date):
-            return obj.isoformat()
-        elif isinstance(obj, datetime.time):
-            return obj.isoformat()
-        elif isinstance(obj, datetime.timedelta):
-            return obj.total_seconds()
-        elif isinstance(obj, decimal.Decimal):
-            return str(obj)
+        if isinstance(obj, datetime.datetime): return obj.isoformat()
+        elif isinstance(obj, datetime.date): return obj.isoformat()
+        elif isinstance(obj, datetime.time): return obj.isoformat()
+        elif isinstance(obj, datetime.timedelta): return obj.total_seconds()
+        elif isinstance(obj, decimal.Decimal): return str(obj)
         else:
-            try:
-                return json.JSONEncoder.default(self, obj)
-            except:
-                return repr(obj)
-enc = Encoder(indent=None, sort_keys=True)
+            try: return json.JSONEncoder.default(self, obj)
+            except: return repr(obj)
+enc = Encoder(sort_keys=True)
 
-## session ###################################################################
+## session #####################################################################
 
 class Session:
+    dsn = None
+
     def __init__(self, socket):
         self.socket = socket
         self._user = None
         self._db, self._cur = None, None
 
-    ## socket ################################################################
+    ## socket ##################################################################
+
+    @asyncio.coroutine
+    def ping(self, data=None): return (yield from self.socket.ping(data))
 
     @asyncio.coroutine
     def send(self, data): return (yield from self.socket.send(data))
 
     @asyncio.coroutine
-    def recv(self): return (yield from self.socket.recv())
+    def recv(self):
+        count = 0
+        while True:
+            try: return (yield from asyncio.wait_for(self.socket.recv(), timeout=5))
+            except asyncio.TimeoutError:
+                count += 1
+                if count % 6 == 0: yield from asyncio.wait([self.done(), self.ping()])
 
-    ## loop ##################################################################
+    ## loop ####################################################################
 
     @asyncio.coroutine
     def run(self):
-        if not (yield from self.login()): return
+        while not (yield from self.login()): pass
 
-        ready = True
         while True:
-            if ready: yield from self.send('>')
+            yield from self.send('>')
+
             req = yield from self.recv()
             if req is None: break
-
-            ready = True
             try:
                 cmd = req.strip()
-                if cmd == '~':              # ping
-                    ready = False
-                elif cmd.startswith('#'):   # list
+                if cmd.startswith('#'):     # list
                     yield from self.list()
                 elif cmd.startswith('$'):   # schema
                     yield from self.schema(cmd[1:].strip())
@@ -82,55 +78,43 @@ class Session:
                     except ValueError: num = 0
                     yield from self.data(num if num > 0 else 50)
                 elif cmd.startswith('*'):   # done
-                    if self._cur is not None:
-                        self._cur.close()
-                        self._cur = None
-                elif self._user in ['alexkoay', 'root'] and cmd == 'reload':
-                    yield from self.send('!Terminating...')
-                    loop.stop()
+                    yield from self.done()
                 else:
                     yield from self.send('!Invalid request')
             except Exception as e:
                 print(traceback.format_exc())
                 yield from self.send('!Unknown error')
 
-    ## methods ###############################################################
+    ## methods #################################################################
 
     @asyncio.coroutine
     def login(self):
-        db = yield from aiopg.connect(sys.argv[1])
-        cur = yield from db.cursor()
+        yield from self.send('@')
+        user = yield from self.recv()
+        yield from self.send('*')
+        password = yield from self.recv()
 
-        while True:
-            try:
-                yield from self.send('@')
-                user = yield from self.recv()
-                yield from self.send('*')
-                password = yield from self.recv()
-            except ws.InvalidState as e:
-                return False
-
+        with (yield from pool.cursor()) as cur:
             yield from cur.execute('select hash from mimir.users where uid = %s', [user])
             data = yield from cur.fetchone()
-            if data and hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'salt', 200000) != data[0].tobytes():
-            # if not data or hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'salt', 100000) != data[0].tobytes():
-                yield from self.send('!Could not authenticate')
-                continue
 
-            try:
-                self._db = yield from aiopg.connect(database=sys.argv[2], user=user)
-            except pg.Error as e:
-                yield from self.send('!Error connecting to database')
-                continue
+        if data and hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'salt', 200000) != data[0].tobytes():
+            yield from self.send('!Could not authenticate')
+            return False
 
-            self._user = user
-            if not data: yield from cur.execute('insert into mimir.users values (%s, %s)', [user, hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'salt', 200000)])
+        try:
+            self._db = yield from aiopg.connect('{} user={}'.format(Session.dsn, user))
+        except pg.Error as e:
+            print(e)
+            yield from self.send('!Error connecting to database')
+            return False
 
-            cur = yield from self._db.cursor()
-            yield from cur.execute('SELECT oid, typname FROM pg_type')
-            self._types = {oid: name for oid, name in (yield from cur.fetchall())}
+        self._user = user
 
-            return True
+        cur = yield from self._db.cursor()
+        yield from cur.execute('SELECT oid, typname FROM pg_type')
+        self._types = {oid: name for oid, name in (yield from cur.fetchall())}
+        return True
 
     @asyncio.coroutine
     def list(self):
@@ -197,21 +181,35 @@ class Session:
                 self._cur.close()
                 self._cur = None
 
-## main loop #################################################################
+    @asyncio.coroutine
+    def done(self):
+        if self._cur is not None:
+            self._cur.close()
+            self._cur = None
+
+
+## main loop ###################################################################
 
 @asyncio.coroutine
 def handler(socket, path):
     try: yield from Session(socket).run()
     except ws.InvalidState: pass
 
+@click.command()
+@click.argument('authdb')
+@click.argument('querydb')
+def main(authdb, querydb):
+    loop = asyncio.get_event_loop()
+
+    global pool
+    pool = loop.run_until_complete(aiopg.create_pool(authdb))
+    Session.dsn = querydb
+
+    server = asyncio.ensure_future(ws.serve(handler, 'localhost', 8765))
+    try:
+        loop.run_forever()
+    finally:
+        loop.close()
+
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Usage: {} <auth connect string> <querydb>'.format(sys.argv[0]))
-    else:
-        loop = asyncio.get_event_loop()
-        server = ws.serve(handler, 'localhost', 8765)
-        try:
-            asyncio.async(server)
-            loop.run_forever()
-        finally:
-            loop.close()
+    main()
