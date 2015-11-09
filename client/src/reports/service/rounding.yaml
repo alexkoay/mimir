@@ -1,0 +1,49 @@
+type: query
+data:
+    name: WIP Rounding
+    auto: true
+    cmd: |
+        with wip as (select p.company, p.wipno, (case left(p.part, 1) when 'B' then 'B' when 'C' then 'C' when 'M' then 'M' else 'Z' end) fran, p.order * p.cost * p.contribution / 100 as cost
+            from wip_parts p
+            where ordstat = 'X' and invstat in ('H', 'I')),
+        wipg as (select (case company when 'A1' then '0040' when 'A2' then '0140' when 'A3' then '0240' when 'A4' then '0340' when 'A5' then '0440' when 'AA' then '0043' when 'AD' then '0343' when 'AK' then '0049' else '0000' end) as cc,
+            company, wipno,
+            (case fran
+                when 'B' then 14000001
+                when 'M' then 14010001
+                when 'C' then 14030001
+                else 14080001
+            end) expense,
+            fran, sum(round(cost::decimal, 2)) as cost from wip group by company, wipno, fran),
+        acct as (select cost as cc, (case cost
+                    when '0040' then 'A1'
+                    when '0140' then 'A2'
+                    when '0240' then 'A3'
+                    when '0340' then 'A4'
+                    when '0440' then 'A5'
+                    when '0043' then 'AA'
+                    when '0343' then 'AD'
+                    when '0049' then 'AK'
+                    else 'A0'
+                end) company,
+                suffix,
+                expense,
+                (case expense
+                    when 14000001 then 'B'
+                    when 14010001 then 'M'
+                    when 14030001 then 'C'
+                    else 'Z'
+                end) fran,
+                sum(round(value::decimal, 2)) as value
+            from nl where expense / 1000000 = 14 group by cost, expense, suffix),
+        error as (select coalesce(w.company, a.company) company,
+                coalesce(w.wipno::text, a.suffix) wip,
+                coalesce(w.fran, a.fran)::character fran,
+                coalesce(w.cc, a.cc) as cc,
+                coalesce(w.expense, a.expense) expense,
+                w.cost, a.value
+            from wipg w full outer join acct a on a.company = w.company and a.suffix = w.wipno::text and a.fran = w.fran
+            where (w.cost != 0 or a.value != 0) and (w.cost != a.value or w.cost is null or a.value is null)),
+        parts as (select *, round(cost::decimal, 2) round2 from wip_parts p where exists (select 1 from error e where e.company = p.company and e.wip = p.wipno::text) and p.ordstat != 'D'),
+        invoiced as (select * from wip_parts p where exists (select 1 from error e where e.company = p.company and e.wip = p.wipno::text) and p.ordstat != 'D')
+        select * from error e

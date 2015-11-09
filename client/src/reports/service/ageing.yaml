@@ -1,0 +1,38 @@
+type: query
+data:
+    name: WIP Ageing
+    auto: true
+    cmd: |
+        WITH data AS (
+            SELECT l.company, (CASE WHEN l.suffix LIKE 'N%%' OR l.suffix LIKE 'U%%' THEN l.customer ELSE l.suffix END) as suffix,
+                w.regno, COALESCE(w.account, l.account) as account, COALESCE(w.customer, l.narrative) as customer, w.first_in, w.check_in, o.name,
+                l.cost, l.expense, l.posting, l.value,
+                LEAST(w.first_in, w.check_in, l.posting) agedate
+            FROM nl_trans l
+                LEFT OUTER JOIN wip_header w ON l.company = w.company AND (CASE WHEN l.suffix LIKE 'N%%' OR l.suffix LIKE 'U%%' THEN l.customer ELSE l.suffix END) = w.wipstr
+                LEFT OUTER JOIN pos_opers o ON l.company = o.company AND (CASE w.opowner WHEN '' THEN w.opcreate ELSE w.opowner END) = o.operator
+            WHERE
+                l.expense in (13100002, 14000001, 14010001, 14030001, 14080001) AND
+                l.posting <= now()::date
+        ),
+        grouped AS (
+            SELECT company, suffix, regno, account, customer, first_in, check_in, name,
+            MIN(agedate) as agedate, now()::date - MIN(agedate) as agedays,
+            ROUND(SUM(value)::decimal, 2) as total,
+            ROUND(SUM(value) FILTER (WHERE expense = 14000001)::decimal, 2) as bmw_parts,
+            ROUND(SUM(value) FILTER (WHERE expense = 14010001)::decimal, 2) as mini_parts,
+            ROUND(SUM(value) FILTER (WHERE expense = 14030001)::decimal, 2) as mr_parts,
+            ROUND(SUM(value) FILTER (WHERE expense = 14080001)::decimal, 2) as nf_parts,
+            ROUND(SUM(value) FILTER (WHERE expense = 13100002)::decimal, 2) as sublet
+            FROM data
+            GROUP BY company, suffix, regno, account, customer, first_in, check_in, name
+        )
+        SELECT *,
+            (CASE WHEN agedays <= 30 THEN total ELSE NULL END) day30,
+            (CASE WHEN 30 < agedays AND agedays <= 60 THEN total ELSE NULL END) day60,
+            (CASE WHEN 60 < agedays AND agedays <= 90 THEN total ELSE NULL END) day90,
+            (CASE WHEN 90 < agedays AND agedays <= 120 THEN total ELSE NULL END) day120,
+            (CASE WHEN 120 < agedays AND agedays <= 150 THEN total ELSE NULL END) day150,
+            (CASE WHEN 150 < agedays AND agedays <= 180 THEN total ELSE NULL END) day180,
+            (CASE WHEN 180 < agedays THEN total ELSE NULL END) exceed FROM grouped WHERE total != 0
+        ORDER BY company, agedays DESC, suffix
