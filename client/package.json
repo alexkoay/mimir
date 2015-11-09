@@ -1,15 +1,13 @@
 {
-  "name": "mimir-ui",
+  "name": "mimir",
   "version": "0.1.0",
   "description": "Dashboard client UI",
   "main": "src/base.js",
   "scripts": {
-    "build": "npm-run-all -p build-js build-css",
-    "build-js": "browserify base.ts -s mimir -o mimir.js -vd -p [ tsify --target es6 --noImplicitAny ] -t [ babelify --plugins transform-es2015-modules-commonjs --extensions .ts,.js ]",
-    "build-css": "node-sass css/base.scss mimir.ui.css",
-    "watch": "npm-run-all -p watch-js watch-css",
-    "watch-js": "watchify base.ts -s mimir -o mimir.js -vd -p [ tsify --target es6 --noImplicitAny ] -t [ babelify --plugins transform-es2015-modules-commonjs --extensions .ts,.js ]",
-    "watch-css": "node-sass -r --watch=css/ css/base.scss mimir.ui.css",
+    "build-js": "webpack",
+    "build-css": "node-sass css/base.scss mimir.css",
+    "watch-js": "webpack --watch",
+    "watch-css": "node-sass --watch=css/ css/base.scss mimir.css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "private": true,
@@ -17,6 +15,6 @@
   "devDependencies": {
     "babel-core": "^5.8.33",
     "babel-loader": "^5.3.3",
-    "ts-loader": "^0.6.1",
+    "ts-loader": "^0.6.1"
   }
 }
