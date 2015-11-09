@@ -1,31 +1,6 @@
 import Node from './node';
 import Panel from './panel';
 
-function appear(el: HTMLElement, fn?: {(): any}) {
-	/*var style = window.getComputedStyle(el);
-	var height = style.height;
-
-	el.style.opacity = '0';
-	Velocity(el, {opacity: 1}, {duration: 200});
-
-	el.style.height = '0';
-	Velocity(el, {height: height}, {duration: 200, queue: false, complete: () => {
-		el.style = null;
-		if (fn) { fn(); m.redraw(); }
-	}});*/
-	fn && fn();
-}
-
-function disappear(el: HTMLElement, fn?: {(): any}) {
-	fn && fn(); return;
-	/*el.style.opacity = '1';
-	Velocity(el, {opacity: 0}, {duration: 200});
-
-	Velocity(el, {height: 0}, {duration: 200, queue: false, complete: () => {
-		if (fn) { fn(); m.redraw(); }
-	}});*/
-}
-
 export default class Styled extends Panel {
 	protected $minimize: boolean;
 

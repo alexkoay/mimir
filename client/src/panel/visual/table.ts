@@ -33,7 +33,6 @@ export default class Table extends Panel {
 	get renderLast() { return Math.min(this.viewLast + 5, this.rows().length); }
 
 	config(el: HTMLElement, isInit: boolean) {
-		var calc = false;
 		if (!this.header) {
 			let row = el.querySelector('thead');
 			if (!row) { return; }
