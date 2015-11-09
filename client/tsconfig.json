@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "noImplicitAny": true,
+        "outDir": "build/"
+    },
+    "filesGlob": [
+        "./src/base.ts",
+        "./typings/**/*.ts",
+        "!./node_modules/**/*.ts"
+    ]
+}

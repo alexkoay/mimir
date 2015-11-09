@@ -1,0 +1,62 @@
+@import '_vars';
+
+body {
+	font: 12pt/1 'Segoe UI';
+	padding: 1rem;
+}
+
+h1 {
+	font-size: 2em;
+	font-weight: 600;
+}
+
+pre, samp, kbd {
+	font-family: $font-mono;
+	white-space: pre;
+}
+
+input { padding: 0.25em 0.5em; }
+button {
+	cursor: pointer;
+	padding: 0.5em 0.25em;
+	border: 0;
+
+	background: transparent;
+	color: $clr-btn-light;
+	border: 0px solid;
+
+	&:disabled, &:disabled:hover {
+		cursor: inherit;
+		background: transparent !important;
+		color: #999 !important;
+	}
+
+	&:focus, &:hover {
+		background: $clr-btn-light;
+		color: #fff;
+	}
+
+	&:active {
+		background: $clr-btn-dark;
+		color: #fff;
+	}
+
+	&.ok {
+		color: $clr-btn-ok;
+		&:focus, &:hover { background: $clr-btn-ok; color: #fff; }
+		&:active { background: darken($clr-btn-ok, 20%); color: #fff; }
+	}
+
+	&.cancel {
+		color: $clr-btn-cancel;
+		&:focus, &:hover { background: $clr-btn-cancel; color: #fff; }
+		&:active { background: darken($clr-btn-cancel, 20%); color: #fff; }
+	}
+}
+
+.icon { width: 1em; height: 1em; fill: currentColor; }
+
+@import 'header';
+@import 'panel';
+@import 'report';
+@import 'visual';

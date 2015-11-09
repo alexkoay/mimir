@@ -1,0 +1,33 @@
+.visual-table {
+	.content {
+		min-width: 0;
+		.container {
+			overflow: auto;
+			max-height: 50vh;
+			&.hide { display: none; }
+		}
+	}
+	table {
+		border-spacing: 0;
+		line-height: 1.5;
+		th:last-child { width: 100%; }
+		tr { border-bottom: 1px solid #999; }
+		thead {
+			th { padding: 0 1em; font-weight: 600; }
+			td { display: table-cell; text-align: center; }
+			td { display: none; }
+		}
+		tbody {
+			tr.row.even { background: #eee; }
+			td {
+				padding: 0.1em 0.5em;
+				white-space: pre;
+
+				&.bpchar, &.date, &.time { text-align: center; }
+				&.int4, &.numeric { text-align: right; }
+				div { transition: width 10s; }
+				span.more { float: right; }
+			}
+		}
+	}
+}

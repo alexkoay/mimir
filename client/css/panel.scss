@@ -1,0 +1,59 @@
+@import '_vars';
+
+.panel {
+	display: flex;
+	width: 100%;
+	margin-bottom: $len-spacing;
+
+	.control {
+		flex: 0 0 2rem;
+
+		&.left { order: -1; }
+		&.right { order: 1; }
+
+		button {
+			width: 2rem;
+			background: transparent;
+			color: #000;
+
+			&:hover, &:focus {
+				&.min { color: $clr-btn-light; }
+				&.max { color: $clr-btn-light; }
+				&.close { background: #f33; color: #fff; }
+			}
+
+			&:active {
+				&.min { color: $clr-btn-dark; }
+				&.max { color: $clr-btn-dark; }
+				&.close { background: #c33; }
+			}
+		}
+
+		&.left button { height: 2rem; }
+		&.right button { height: 2rem; }
+	}
+
+	.content { flex: 1; display: flex; flex-direction: column; }
+
+	.toolbar, .repr {
+		display: flex;
+		align-items: baseline;
+		height: 2rem;
+		line-height: 2;
+
+		.spacer { flex: 1; }
+		input { line-height: 1 };
+		button {
+			padding: 0 0.25em;
+			height: 2em; line-height: 1;
+		}
+		.type { font-weight: bold; }
+	}
+	.toolbar > span {
+		padding: 0 0.25em;
+		&:first-child { padding-left: 0.5em; }
+		&:last-child { padding-right: 0.5em; }
+	}
+}
+
+@import 'query';
