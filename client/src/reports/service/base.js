@@ -1,8 +1,10 @@
-import Ageing from './ageing';
-import Rounding from './rounding';
 
 var output = {};
-output[Ageing.data.name] = Ageing;
-output[Rounding.data.name] = Rounding;
+
+var ctx = require.context('.', false, /\.yaml$/);
+ctx.keys().forEach(key => {
+	let query = ctx(key);
+	output[query.data.name] = query;
+});
 
 export default output;
