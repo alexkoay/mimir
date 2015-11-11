@@ -137,7 +137,9 @@ class Session:
         cur = yield from self._db.cursor()
         try:
             if '.' in name: schema, table = name.split('.', 2)
-            else: schema, table = name, 'public'
+            else:
+                schema, table = 'public', name
+                name = '{}.{}'.format(schema, name)
 
             query = 'select column_name, data_type from information_schema.columns where table_schema = %s and table_name = %s order by ordinal_position'
             yield from cur.execute(query, [schema, table])
