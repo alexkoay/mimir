@@ -4,3 +4,4 @@ node_modules
 *.lnk
 *.bat
 mimir.js
+mimir.reports.js
