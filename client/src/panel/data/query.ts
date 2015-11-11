@@ -112,4 +112,4 @@ export default class Query extends Panel {
 	}
 }
 
-Panel.register('query', Query);
+Panel.register('data/query', Query);

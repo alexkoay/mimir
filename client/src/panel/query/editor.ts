@@ -59,7 +59,7 @@ export default class Editor extends Panel {
 	execute(val?: string) {
 		window.clearTimeout(this.timer);
 		if (val !== undefined) { this.cmd = val; }
-		var node = this.node.createChild('query', {cmd: this.cmd, auto: true});
+		var node = this.node.createChild('data/query', {cmd: this.cmd, auto: true});
 		if (this.auto && val !== undefined) {
 			this.node.replaceNode(this.last, node) || this.node.insertNode(node);
 			this.last = node;

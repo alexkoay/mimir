@@ -4,10 +4,10 @@ export interface State {
 	// data
 	type: string;
 	data: any;
-	dead: boolean;
+	dead?: boolean;
 
 	// tree
-	down: State[];
+	down?: State[];
 }
 
 var key = 0;
