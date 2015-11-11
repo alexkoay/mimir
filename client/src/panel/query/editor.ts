@@ -1,10 +1,10 @@
 import Socket from '../../socket';
 import Node from '../node';
 import Panel from '../styled';
+import Query from '../data/query';
 
 import Load from './load';
-import Query from './query';
-export {Load, Query};
+export {Load};
 
 export default class Editor extends Panel {
 	private socket: Socket;
