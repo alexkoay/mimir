@@ -1,4 +1,6 @@
-.report-load, .query-load {
+@import '_vars';
+
+.listing {
 	.toolbar { order: -1; }
 	ul {
 		display: flex;

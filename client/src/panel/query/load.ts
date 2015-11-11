@@ -59,6 +59,7 @@ export default class Load extends Panel {
 	view(): MithrilVirtualElement {
 		var list = this.list();
 		return super.view({
+			class: 'listing',
 			view: m('div',
 				m('ul', list.length > 0
 					? [list.map((key: string) => m('li', {key: key, class: key == this.selected ? 'selected' : '', onclick: () => this.select(key)}, key)), m('li.empty', 'End of list.')]
