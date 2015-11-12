@@ -1,5 +1,9 @@
 @import '_vars';
 
+#empty {
+	margin: 0 1.75rem;
+}
+
 .listing {
 	.toolbar { order: -1; }
 	ul {

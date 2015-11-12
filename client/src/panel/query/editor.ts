@@ -61,7 +61,7 @@ export default class Editor extends Panel {
 		if (val !== undefined) { this.cmd = val; }
 		var node = this.node.createChild('data/query', {cmd: this.cmd, auto: true});
 		if (this.auto && val !== undefined) {
-			this.node.replaceNode(this.last, node) || this.node.insertNode(node);
+			this.node.replaceNode(this.last, node, true) || this.node.insertNode(node);
 			this.last = node;
 		}
 		else {

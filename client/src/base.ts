@@ -1,4 +1,5 @@
 import Socket from './socket';
+import Data from './data/base';
 import Panel from './panel/base';
 
-export {Socket, Panel};
+export {Socket, Data, Panel};
