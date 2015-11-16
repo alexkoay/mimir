@@ -49,7 +49,6 @@ export default class Command {
 	order: string[];
 
 	constructor(state: State) {
-		console.log(state);
 		this.restore = state['param'] || {};
 		this.edit = state['edit'] || true;
 		eval('this.process`' + state['cmd'] + '`');
@@ -73,7 +72,6 @@ export default class Command {
 				this.cmd += cmds[i+1];
 			});
 		}
-		console.log(this.cmd);
 	}
 	state() { return {cmd: this.cmd, edit: this.edit, param: this.param}; }
 
