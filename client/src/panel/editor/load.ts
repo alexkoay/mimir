@@ -25,7 +25,7 @@ export default class Load extends Panel {
 		this.socket = will.socket;
 	}
 	will() { return {socket: this.socket}; }
-	state() { return super.state().include({}); }
+	state() { return super.state().include({cmd: this.cmd, auto: this.auto, wait: this.wait, last: this.last}); }
 	toJSON() { return super.toJSON().exclude('last'); }
 	close() { this.parent.delete(this, false); return this; }
 

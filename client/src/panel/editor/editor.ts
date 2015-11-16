@@ -13,6 +13,8 @@ export default class Editor extends Panel {
 	wait: number;
 	private timer: number;
 
+	private last: Query;
+
 	private capture: boolean;
 	private noChord: boolean;
 
@@ -21,13 +23,15 @@ export default class Editor extends Panel {
 		this.cmd = state['cmd'];
 		this.auto = state['auto'] || false;
 		this.wait = state['wait'] || 1.0;
+		this.last = state['last'] || null;
 	}
 	inherit(parent: NodeList, will: any) {
 		super.inherit(parent, will);
 		this.socket = will.socket;
 	}
 	will() { return {socket: this.socket}; }
-	state() { return super.state().include({cmd: this.cmd, auto: this.auto, wait: this.wait}); }
+	state() { return super.state().include({cmd: this.cmd, auto: this.auto, wait: this.wait, last: this.last}); }
+	toJSON() { return super.toJSON().exclude('last'); }
 	close() { this.parent.delete(this, false); return this; }
 
 	// model ///////////////////////////////////////////////////////////////////
@@ -50,11 +54,14 @@ export default class Editor extends Panel {
 		if (val !== undefined) { this.cmd = val; }
 
 		var data: State = {type: 'data/query', cmd: this.cmd};
-		var last = <Panel> this.children.last;
-		(last
-			&& ((this.auto && val !== undefined) || last.error)
-			&& this.children.change(last, data))
-		|| this.children.create(data);
+
+		// detect if the last query was an error
+		if (this.last && this.last.error) { this.last = <Query> this.children.last; }
+		this.last = <Query> (
+			(this.last
+				&& ((this.auto && val !== undefined) || this.last.error)
+				&& this.children.change(this.last, data))
+			|| this.children.create(data));
 
 		if (val !== undefined) { m.redraw(); }
 	}
@@ -105,7 +112,7 @@ export default class Editor extends Panel {
 				Panel.toolbar([
 					m('button', {onclick: () => this.execute()}, 'Run'),
 					m('button', {onclick: () => this.load()}, 'Load'),
-					m('button', {onclick: () => this.save(), disabled: !this.children.last || this.children.last.error}, 'Save'),
+					m('button', {onclick: () => this.save(), disabled: !this.last || this.last.error}, 'Save'),
 				], [
 					!this.auto ? null : m('span',
 						m('input[type=number]',
