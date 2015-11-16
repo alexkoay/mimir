@@ -1,82 +1,159 @@
 import Socket from '../../socket';
 import Data from '../../data/query';
-import Node from '../node';
-import Panel from '../styled';
+import Panel, {State, NodeList} from '../panel';
+
+const MAX_PREVIEW = 30;
 
 export default class Query extends Panel {
-	private socket: Socket;
-	private cmd: string;
+	private socket: Socket = null;
+	name: string;
+	cmd: string;
+	error: string;
 
-	private name: string;
-	private auto: boolean;
-	private error: string;
+	params: {[key: string]: any};
+	private $parsed: string;
+	private $order: string[];
+	private $temp: {[key: string]: any};
 
-	private $data: Data;
+	private data: Data;
 
-	constructor(node: Node, parent: any, state: any) {
-		super(node, parent, state);
+	constructor(state: State) {
+		super(state);
+		this.cmd = state['cmd'];
+		this.params = state['params'] || null;
+		this.name = state['name'] || null;
+		this.error = state['error'] || null;
+		if (this.error) {
+			if (this.params) {
+				this.error = null;
+				this.params = null;
+			}
+			else { this.$close = true; }
+		}
 
-		this.$minimize = null;
-		this.socket = parent.socket;
-		this.cmd = state.cmd;
-
-		this.$data = new Data(this.socket, this.cmd);
-		this.$data.onchange = () => m.redraw();
-
-		this.name = state.name || null;
-		this.error = state.error || null;
-		this.auto = state.auto || false;
-
-		if (this.error) { this.node.deleteSelf(); }
-		else { this.query(); }
+		this.process();
 	}
-	useParent(parent: any) { super.useParent(parent); this.socket = parent.socket; }
+	inherit(parent: NodeList, will: any) {
+		super.inherit(parent, will);
+		if (this.socket != will.socket) {
+			this.socket = will.socket;
+			this.data = new Data(this.socket, this.$parsed);
+			this.data.onchange = () => m.redraw();
+			if (!this.dead()) { this.query(); }
+		}
+	}
+	will() { return {socket: this.socket, data: this.data}; }
+	dead() { return this.$close; }
+	state() { return super.state().include({name: this.name, cmd: this.cmd, params: this.params, error: this.error}); }
 
-	args(...more: any[]): any { return super.args(...more, {cols: () => this.$data.cols, rows: () => this.$data.rows}); }
-	get data(): any { return {cmd: this.cmd, name: this.name, error: this.error}; }
+	// model ///////////////////////////////////////////////////////////////////
+
 	get isError() { return !!this.error; }
+	get pending() { return this.data.pending; }
+	get cancelled() { return this.data.cancelled; }
+	get completed() { return this.data.completed; }
 
 	get preview() {
 		if (this.name) { return this.name; }
 		var lines = this.cmd.split('\n');
 		var first = lines[0];
-		if (first.length > 30 || lines.length > 1) { first = first.substring(0, 30) + '...'; }
+		if (first.length > MAX_PREVIEW || lines.length > 1) { first = first.substring(0, MAX_PREVIEW) + '...'; }
 		return first;
 	}
 
-	get cancelled() { return this.$data.cancelled; }
-	get completed() { return this.$data.completed; }
+	get paramsPopulated() { return !this.params || Object.keys(this.params).every(key => !!this.params[key]); }
 
-	close() { super.close(true); }
+	get loadedRows() { return this.data.rows.length; }
+	get totalRows() { return this.data.count; }
+
+	// controller //////////////////////////////////////////////////////////////
+
+	process() {
+		try { eval('this._process`' + this.cmd + '`'); }
+		catch (e) { this.fail(e.toString()); }
+	}
+	private _process(cmds: string[], ...args: any[]) {
+		if (cmds.length == 1) { this.$parsed = this.cmd; }
+		else {
+			let old = this.params || {};
+			this.params = {};
+			this.$order = args.map((arg: any) => {
+				var key: string, val: any = null, init: boolean = true;
+				if (typeof arg === 'string') { key = arg; }
+				else {
+					key = arg.key;
+					val = arg.val.toString();
+					init = arg.init;
+				}
+
+				// prefer value in the command string than saved data
+				if (!init) { val = (old[key] !== undefined ? old[key] : val); }
+
+				this.params[key] = val;
+				return key;
+			});
+
+			this.$parsed = cmds[0];
+			for (let i=0; i<this.$order.length; ++i) {
+				this.$parsed += '%(' + this.$order[i] + ')s';
+				this.$parsed += cmds[i+1];
+			}
+		}
+	}
+	update(key: string, value: any) { this.params[key] = value; }
+
 	query() {
-		if (this.node.dead || this.error) { return; }
-		var p = this.$data.query();
-		p.catch((msg: string): any => this.fail(msg));
-		if (this.auto) { p.then(this.viewdata.bind(this)); }
+		if (this.dead()) { return; }
+		if (this.params && !this.paramsPopulated) { return; }
+		if (!this.params && this.error) { return; }
+		this.error = null;
+		this.data.query(this.params)
+			.then(this.table.bind(this, true), this.fail.bind(this))
+			.catch(console.log.bind(console, 'error'));
 	}
-	fail(msg: string) {
-		this.error = msg;
-		m.redraw();
+	stop() { this.data.cancel(); }
+	fail(msg: string) { this.error = msg; }
+	table(auto?: boolean) {
+		if (auto && this.children.length != 0) { return; }
+		this.children.create({type: 'visual/table'});
 	}
 
-	viewdata(auto?: boolean) {
-		if (!auto || this.node.numChildren == 0) { this.node.insertNewChild('visual/table', null); }
-	}
+	// view ////////////////////////////////////////////////////////////////////
 
-	view(): MithrilVirtualElement {
-		if (this.error) { return super.view({view: m('samp.error', this.error)}); }
-		return super.view({
-			toolbar: {left: [
-				!this.$data.pending && (this.$data.cancelled || this.$data.completed)
-					? m('button', {onclick: this.query.bind(this)}, Panel.icon('cycle', 'Cycle'))
-					: m('button', {onclick: () => this.$data.cancel() }, Panel.icon('controller-stop', 'Stop')),
-				m('span.cmd', this.preview)
-			],
-			right: [
-				m('span', this.$data.rows.length, ' / ', this.$data.count),
-				m('button', {onclick: () => this.viewdata()}, 'View Data')
-			]}
-		});
+	view() {
+		if (!this.socket) { return super.view(null, Panel.toolbar(m('span.error', 'No connection to query.'), null)); }
+		else if (!this.socket.granted) {
+			return super.view(null, Panel.toolbar(
+				[m('span.type', 'Query'), m('span.cmd', this.preview)],
+				m('span.error', 'Not logged in.')
+			));
+		}
+		else {
+			return super.view(null,
+				this.error && !this.params ? null : [
+					Panel.toolbar([
+						!this.pending && (this.cancelled || this.completed)
+							? (this.params
+								? m('button', {onclick: this.query.bind(this), disabled: !this.paramsPopulated}, Panel.icon('e/magnifying-glass'))
+								: m('button', {onclick: this.query.bind(this)}, Panel.icon('e/cycle')))
+							: m('button', {onclick: this.stop.bind(this)}, Panel.icon('e/controller-stop')),
+						m('span.cmd', this.preview)
+					], [
+						m('span', this.loadedRows, ' / ', this.totalRows),
+						m('button', {onclick: () => this.table()}, 'View Data')
+					]),
+					!this.params ? null : m('form', {onsubmit: (e: Event) => { e.preventDefault(); this.query(); }},
+						Object.keys(this.params).map(key =>
+							m('span.param',
+								m('label', {for: this.key + '-param-' + key}, key),
+								m('input', {id: this.key + '-param-' + key, oninput: (e: Event) => this.update(key, (<HTMLInputElement> e.target).value), value: this.params[key]})
+							)
+						)
+					)
+				],
+				this.error ? m('samp.error', this.error) : null
+			);
+		}
 	}
 }
 

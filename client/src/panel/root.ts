@@ -1,15 +1,26 @@
-import Node from './node';
-import Panel from './panel';
+import Socket from '../socket';
+import Node, {State, NodeList} from './node';
 
-export default class Root extends Panel {
-	private state: any;
+export default class Root extends Node {
+	private socket: Socket;
 
-	constructor(node: Node, parent: any, state: any) {
-		super(node, parent, state);
-		this.state = state;
+	constructor(state: State) {
+		super(state);
+		this.socket = new Socket(state['url']);
+		this.socket.onchange = () => m.redraw();
+		this.socket.connect().autologin();
+
+		window.addEventListener('beforeunload', this.save.bind(this));
+		this.load();
 	}
-	args() { return this.state; }
-	get data(): any { return null; }
-}
+	will() { return {socket: this.socket}; }
 
-Panel.register('root', Root);
+	load() {
+		var args = JSON.parse(window.localStorage.getItem('state') || 'null');
+		if (args && args.length > 0) {
+			args.forEach((child: State) => this.children.create(child));
+			this.children.prune(true);
+		}
+	}
+	save() { window.localStorage.setItem('state', JSON.stringify(this.children)); }
+}

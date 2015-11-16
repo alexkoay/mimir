@@ -1,134 +1,150 @@
-import Panel, {Registry} from './panel';
+import {State, Extendable} from './state';
+export {State};
 
-export interface State {
-	// data
-	type: string;
-	data: any;
-	dead?: boolean;
-
-	// tree
-	down?: State[];
+export class Registry {
+	static list: { [id: string]: typeof Node; } = {};
+	static set(name: string, type: typeof Node) { Registry.list[name] = type; }
+	static get(name: string): typeof Node {
+		if (name in Registry.list) { return Registry.list[name]; }
+		else { throw 'Node type not found: ' + name; }
+	}
 }
 
-var key = 0;
-export default class Node {
-	private $key: number = ++key;
-	private $ctrl: Panel;
+export class NodeList {
+	private $self: Node;
+	private $list: Node[];
 
-	// data
-	private $type: string;
-	private $data: any;
-	private $dead: boolean = false;
-
-	// tree
-	private $up: Node;
-	private $down: Node[] = [];
-
-	constructor(type: string, data: any, up?: Node) {
-		this.$up = up || null;
-		this.$type = type;
-		this.$data = data || null;
-		this.refreshSelf();
+	constructor(self: Node, list?: Node[]) {
+		this.$list = list || [];
+		this.reparent(self);
 	}
-	get key() { return this.$key; }
-	get type() { return this.$type; }
-	get dead() { return this.$dead; }
-	get ctrl() { return this.$ctrl; }
+	toJSON() { return this.$list; }
 
-/// state //////////////////////////////////////////////////////////////////////
-
-	view(): any {
-		var self = this.$dead ? null : this.$ctrl.view();
-		var down = this.$down.map(child => child.view());
-		down.reverse();
-		if (!self) { return down; }
-		else if (!down) { return self; }
-		else { return [self].concat(down); }
+	// identity
+	reparent(self: Node) {
+		if (!self) { throw 'NodeList must be owned by a Node, instead got: ' + JSON.stringify(self); }
+		this.$self = self;
+		this.$list.forEach(child => child.inherit(this, self.will()));
+		return this;
 	}
 
-	// restore tree from save state
-	static loadState(tree: State, up?: Node): Node {
-		var node = new Node(tree.type, tree.data, up);
-		tree.down && tree.down.forEach(child => node.$down.push(Node.loadState(child, node)));
-		if (tree.dead) { node.$dead = true; }
-		if (!up) { node.pruneTree(); }
+	// properties
+	get length() { return this.$list.length; }
+
+	// accessors
+	at(pos: number) { return this.$list[pos] || null; }
+	id(key: number) { return this.$list.find(child => child.key === key); }
+	pos(key: number | Node) {
+		if (key instanceof Node) { return this.$list.findIndex(child => child === key); }
+		else { return this.$list.findIndex(child => child.key === key); }
+	}
+
+	// iterators
+	each(fn: {(node: Node): void}) { this.$list.forEach(fn); }
+	map<T>(fn: {(node: Node): T}): T[] { return this.$list.map(fn); }
+	depth(fn: {(node: Node): void}, reverse?: boolean) {
+		this.prune();
+		var list = this.$list.slice();
+		if (reverse) { list.reverse(); }
+		list.forEach(child => { fn(child); child.children.depth(fn, reverse); });
+	}
+	collect(reverse?: boolean) {
+		var list: Node[] = [];
+		this.depth(child => list.push(child), reverse);
+		return list;
+	}
+
+
+	// mutators
+	initialize(arg: string | State) {
+		var state: State;
+		if (typeof arg === 'string') { state = {type: arg}; }
+		else { state = arg; }
+
+		var node = new (Registry.get(state.type))(state);
+		node.inherit(this, this.$self.will());
+
+		if (state.children) { state.children.forEach((child: State) => node.children.create(child)); }
 		return node;
 	}
+	create(state: string | State) { return this.insert(this.initialize(state)); }
+	insert(node: Node) { this.$list.push(node); return node; }
+	change(node: Node, state: string | State | Node) {
+		var pos = this.pos(node);
+		if (pos < 0) { return null; }
 
-	// generate save state
-	saveState(): State {
-		this.$data = this.$ctrl.data;
-		return {
-			type: this.$type,
-			data: this.$data,
-			dead: this.$dead,
-			down: this.$down.map(child => child.saveState())
-		};
-	}
-
-/// manipulation ///////////////////////////////////////////////////////////////
-
-	private refreshSelf() { this.$ctrl = new (Registry.get(this.$type))(this, this.$up ? this.$up.$ctrl.args() : null, this.$data); }
-	changeSelf(type: string, data?: any) {
-		this.$data = data || this.$ctrl.data;
-		this.$type = type;
-		this.refreshSelf();
-	}
-	replaceWithState(state: State) {
-		var node = Node.loadState(state, this.$up);
-		this.$up.replaceNode(this, node);
-	}
-	deleteSelf(alsoChild?: boolean) {
-		this.$dead = true;
-		if (alsoChild) { this.$down = []; }
-		this.pruneTree();
-	}
-	private pruneSelf() {
-		if (this.$dead && this.$down.length == 0) {
-			this.$up.removeNode(this);
-		}
-	}
-	private pruneTree() {
-		this.$down.forEach(child => child.pruneTree());
-		this.pruneSelf();
-	}
-
-/// children ///////////////////////////////////////////////////////////////////
-
-	createChild(type: string, data: any): Node { return new Node(type, data, this); }
-	insertNode(node: Node, pos?: number): number {
-		if (!node) { return null; }
-		else if (pos === undefined) { this.$down.push(node); return this.$down.length - 1; }
-		else { this.$down.splice(pos, 0, node); return pos; }
-	}
-	insertNewChild(type: string, data: any, pos?: number): Node {
-		var node = this.createChild(type, data);
-		this.insertNode(node, pos);
-		return node;
-	}
-	replaceNode(old: Node, node: Node, retain?: boolean) {
-		if (!old) { return null; }
-		var pos = this.$down.findIndex(c => c === old);
-		if (pos >= 0) {
-			this.$down[pos] = node;
-			if (retain) {
-				node.$down = node.$down.concat(old.$down);
-				var args = node.$ctrl.args();
-				old.$down.forEach(child => child.$ctrl.useParent(args));
+		var next: Node;
+		if (state instanceof Node) { next = (<Node> state); }
+		else {
+			if (typeof state === 'string') {
+				let freeze = node.state();
+				freeze['type'] = (<string> state);
+				state = freeze;
 			}
-			return true;
+			next = this.initialize(<State> state);
 		}
-		else { return null; }
+
+		next.children.adopt(node.children, 0);
+		this.$list[pos] = next;
+		return next;
 	}
-	private removeNode(node: Node): boolean {
-		if (!node) { return false; }
-		var pos = this.$down.findIndex(c => c === node);
-		if (pos >= 0) {
-			this.$down.splice(pos, 1);
-			this.pruneSelf();
-		}
+	adopt(other: NodeList, pos?: number) {
+		other.reparent(this.$self);
+		if (pos === undefined) { Array.prototype.push.apply(this.$list, other.$list); }
+		else { Array.prototype.splice.bind(this.$list, pos, 0).apply(null, other.$list); }
+		return this;
+	}
+	delete(node: Node, disown?: boolean) {
+		var pos = this.pos(node);
+		console.log('found', pos);
+		if (pos < 0) { return false; }
+
+		this.$list.splice(pos, 1);
+		if (!disown) { this.adopt(node.children, pos); }
 		return true;
 	}
-
-	get numChildren() { return this.$down.length; }
+	prune(recurse?: boolean) {
+		if (recurse) { this.$list.forEach(child => child.children.prune(true)); }
+		this.$list = this.$list.filter(child => !child.dead());
+		return this;
+	}
 }
+
+var key: number = 0;
+export default class Node {
+	static register(name: string, type: typeof Node) { Registry.set(name, type); }
+
+	private $key: number = ++key;
+	private $type: string;
+	protected parent: NodeList;
+	children: NodeList = new NodeList(this);
+
+	constructor(state: State) { this.$type = state.type || null; }
+	inherit(parent: NodeList, will: any): void { this.parent = parent; }
+	will(): any { return null; }
+
+	// fixed (doesn't need to be overridden except in extraordinary situations)
+	get key() { return this.$key; }
+	get type() { return this.$type; }
+	toJSON() { return this.state().include({children: this.children}); }
+
+	// node state
+	dead() { return true; }
+	state() { return new Extendable(this.type); }
+}
+
+/* interactions
+Reports
+- Load > replace with state
+
+Explore
+- Load > change Table
+- Table > child Data
+
+Query
+- Editor > change Load
+- Editor > child Data
+- Editor
+
+Data
+*/

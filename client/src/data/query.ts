@@ -27,11 +27,11 @@ export default class Query extends Basic {
 	get cancelled() { return this.$cancel; }
 
 	cancel() { this.$cancel = true; }
-	query() {
+	query(params?: any) {
 		this.$cancel = false;
 		this.$pending = true;
 
-		var p = this.socket.query(this.cmd);
+		var p = this.socket.query(this.cmd, params);
 		p.then(this._process.bind(this)).then(this._retrieve.bind(this)).catch(this._fail.bind(this));
 		return p;
 	}

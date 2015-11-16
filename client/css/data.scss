@@ -1,7 +1,12 @@
 
 .data-query {
-	.error {
-		padding: 0.5em;
-		color: $clr-error;
+	.param {
+		label {
+			line-height: 2;
+			margin-right: 0.5em;
+		}
 	}
+
+	samp { padding: 0.5em; }
+	.error { color: $clr-error; }
 }

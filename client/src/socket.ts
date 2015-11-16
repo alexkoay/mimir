@@ -135,7 +135,7 @@ export default class Socket {
 	set granted(val: boolean) { this.$granted = !!val; this.onchange('granted'); }
 	set ready(val: boolean) { this.$ready = !!val; this.onchange('ready'); }
 
-	connect(force: boolean): Socket {
+	connect(force?: boolean): Socket {
 		if (this.connected && !force) { return; }
 		this.status = 'Connecting...';
 

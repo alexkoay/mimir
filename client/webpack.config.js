@@ -4,7 +4,12 @@ module.exports = [
     entry: './src/base',
     output: { filename: 'mimir.js', library: 'mimir' },
     resolve: { extensions: ['', '.ts'] },
-    module: { loaders: [ { test: /\.ts$/, loader: 'babel!ts' } ] }
+    module: {
+      loaders: [
+        { test: /\.ts$/, loader: 'babel!ts' },
+        { test: /\.js$/, loader: 'babel' }
+      ]
+    }
   },
   {
     name: 'reports',

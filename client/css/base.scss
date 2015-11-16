@@ -13,6 +13,9 @@ h1 {
 pre, samp, kbd {
 	font-family: $font-mono;
 	white-space: pre;
+	-webkit-tab-size: 2;
+	-moz-tab-size: 2;
+	tab-size: 2;
 }
 
 input { padding: 0.25em 0.5em; }
@@ -59,6 +62,6 @@ button {
 @import 'header';
 @import 'panel';
 @import 'data';
-@import 'query';
+@import 'editor';
 @import 'listing';
 @import 'visual';

@@ -4,9 +4,12 @@
         "noImplicitAny": true,
         "outDir": "build/"
     },
-    "filesGlob": [
+    "files": [
         "./src/base.ts",
-        "./typings/**/*.ts",
-        "!./node_modules/**/*.ts"
+        "./typings/FileSaver/FileSaver.d.ts",
+        "./typings/mithril/mithril.d.ts",
+        "./typings/moment/moment.d.ts",
+        "./typings/ws/ws.d.ts",
+        "./typings/xlsx/xlsx.d.ts"
     ]
 }
