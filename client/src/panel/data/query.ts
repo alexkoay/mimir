@@ -99,7 +99,10 @@ export default class Query extends Panel {
 			.catch(console.log.bind(console, 'error'));
 	}
 	stop() { this.data.cancel(); }
-	fail(msg: string) { this.parent.change(this, {type: 'error', error: msg}); }
+	fail(msg: string) {
+		this.error = msg;
+		this.parent.change(this, {type: 'error', error: msg});
+	}
 	table(auto?: boolean) {
 		if (auto && this.children.length != 0) { return; }
 		this.children.create({type: 'visual/table'});
@@ -108,15 +111,15 @@ export default class Query extends Panel {
 	// view ////////////////////////////////////////////////////////////////////
 
 	view() {
-		if (!this.socket) { return super.view(null, Panel.toolbar(m('span.error', 'No connection to query.'), null)); }
+		if (!this.socket) { return super.view({tree: false}, Panel.toolbar(m('span.error', 'No connection to query.'), null)); }
 		else if (!this.socket.granted) {
-			return super.view(null, Panel.toolbar(
+			return super.view({tree: false}, Panel.toolbar(
 				[m('span.type', 'Query'), m('span.cmd', this.preview)],
 				m('span.error', 'Not logged in.')
 			));
 		}
 		else {
-			return super.view(null,
+			return super.view({tree: !this.pending},
 				Panel.toolbar([
 					!this.pending && (this.cancelled || this.completed)
 						? (this.params
@@ -126,7 +129,8 @@ export default class Query extends Panel {
 					m('span.cmd', this.preview)
 				], [
 					m('span', this.loadedRows, ' / ', this.totalRows),
-					m('button', {onclick: () => this.table()}, 'View Data')
+					m('button', {onclick: () => this.table()}, 'View Data'),
+					m('button', {onclick: () => this.data.xlsx()}, 'Export')
 				]),
 				!this.params ? null : m('form', {onsubmit: (e: Event) => { e.preventDefault(); this.query(); }},
 					Object.keys(this.params).map(key =>
