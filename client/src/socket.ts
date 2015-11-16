@@ -21,7 +21,7 @@ export default class Socket {
 	private $user: string = null;
 
 	// command queue
-	private $ready: boolean = false;
+	private $pending: number = 0;
 	private $current: Command = null;
 	private $queue: Command[] = [];
 
@@ -38,7 +38,8 @@ export default class Socket {
 
 	get status(): string { return this.$status; }
 	get connected(): boolean { return (this.$conn && this.$conn.readyState === 1) || false; }
-	get ready(): boolean { return this.$ready || false; }
+	get ready(): boolean { return this.$pending === 0; }
+	get pending(): number { return this.$pending; }
 	get granted(): boolean { return this.$granted; }
 	get user(): string { return this.$granted ? this.$user : null; }
 
@@ -80,7 +81,10 @@ export default class Socket {
 
 	send(data: string) {
 		if (this.$debug) { console.log('send:', data.slice(0, 30)); }
-		if (this.$conn.readyState === 1) { this.$conn.send(data); }
+		if (this.$conn.readyState === 1) {
+			this.$pending++;
+			this.$conn.send(data);
+		}
 	}
 	cmd(query: string): Promise<any> {
 		return new Promise((ok, fail) => {
@@ -107,8 +111,6 @@ export default class Socket {
 	done() {
 		if (this.$current && this.$current.query === null) {
 			this.$current = null;
-
-			this.ready = false;
 			this.send('*');
 		}
 	}
@@ -134,14 +136,14 @@ export default class Socket {
 
 	set status(val: string) { this.$status = val; this.onchange('status'); }
 	set granted(val: boolean) { this.$granted = !!val; this.onchange('granted'); }
-	set ready(val: boolean) { this.$ready = !!val; this.onchange('ready'); }
+	set pending(num: number) { this.$pending = num; this.onchange('ready'); }
 
 	connect(force?: boolean): Socket {
 		if (this.connected && !force) { return; }
 		this.status = 'Connecting...';
 
 		// clear state
-		this.ready = false;
+		this.pending = 1;
 
 		// remove old connections
 		if (this.$conn) {
@@ -170,9 +172,8 @@ export default class Socket {
 					this.granted = true;
 					// fall through
 				case '@':
-					this.ready = true;
-					break;
 				case '*':
+					this.pending--;
 					break;
 				default:
 					this.$auth && this.$auth.promise && this.$auth.promise.fail(msg);
@@ -180,7 +181,7 @@ export default class Socket {
 					break;
 			}
 		}
-		else if (type === '>') { this.ready = true; }
+		else if (type === '>') { this.pending--; }
 		else if (this.$current) {
 			var cur: Command = this.$current;
 			var promise: QueryPromise = cur.promise;
@@ -208,17 +209,11 @@ export default class Socket {
 	private _flush() {
 		if (!this.ready) { return; }
 		else if (!this.granted) {
-			if (this.$auth) {
-				this.$auth.response();
-				this.ready = false;
-			}
+			if (this.$auth) { this.$auth.response(); }
 		}
 		else {
 			if (!this.$current) { this.$current = this.$queue.shift(); }
-			if (this.$current && this.$current.query) {
-				this.send(this.$current.query);
-				this.ready = false;
-			}
+			if (this.$current && this.$current.query) { this.send(this.$current.query); }
 		}
 	}
 }
