@@ -10,6 +10,7 @@
 	table {
 		border-spacing: 0;
 		line-height: 1.5;
+		white-space: pre;
 		th:last-child { width: 100%; }
 		tr { border-bottom: 1px solid #999; }
 		thead {
@@ -21,7 +22,6 @@
 			tr.row.even { background: #eee; }
 			td {
 				padding: 0.1em 0.5em;
-				white-space: pre;
 
 				&.bpchar, &.date, &.time { text-align: center; }
 				&.int4, &.numeric { text-align: right; }

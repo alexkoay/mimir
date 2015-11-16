@@ -1,4 +1,3 @@
-
 import Socket from '../../socket';
 import Node, {State, NodeList} from '../node';
 
@@ -24,4 +23,8 @@ export default class Root extends Node {
 		}
 	}
 	save() { window.localStorage.setItem('state', JSON.stringify(this.children)); }
+	view() {
+		this.children.prune(true);
+		return this.children.map(child => child.view()).reverse()
+	}
 }

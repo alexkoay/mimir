@@ -264,7 +264,7 @@ function SocketView(ctrl: SocketCtrl) {
 	}
 	else if (!ctrl.granted) {
 		auth = [
-			m('input', {name: 'username', placeholder: 'Username', disabled: ctrl.pending, config: (e: HTMLElement) => e.focus()}), ' ',
+			m('input', {name: 'username', placeholder: 'Username', disabled: ctrl.pending}), ' ',
 			m('input', {name: 'password', type: 'password', placeholder: 'Password', disabled: ctrl.pending}),
 			m('input', {type: 'checkbox', 'name': 'autologin', disabled: ctrl.pending}),
 			m('button', {type: 'submit', disabled: ctrl.pending}, 'Login')

@@ -4,28 +4,21 @@ import Panel, {State, NodeList} from '../panel';
 
 export default class Load extends Panel {
 	private socket: Socket;
-	cmd: string;
-	auto: boolean;
-	wait: number;
-	last: Query;
+	query: State;
 
 	private selected: string = null;
 	private confirm: string = null;
 
 	constructor(state: State) {
 		super(state);
-		this.cmd = state['cmd'];
-		this.auto = state['auto'] || false;
-		this.wait = state['wait'] || 1.0;
-
-		this.last = state['last'] || null;
+		this.query = state;
 	}
 	inherit(parent: NodeList, will: any) {
 		super.inherit(parent, will);
 		this.socket = will.socket;
 	}
 	will() { return {socket: this.socket}; }
-	state() { return super.state().include({cmd: this.cmd, auto: this.auto, wait: this.wait, last: this.last}); }
+	state() { return super.state().include(this.query); }
 	toJSON() { return super.toJSON().exclude('last'); }
 	close() { this.parent.delete(this, false); return this; }
 
@@ -47,11 +40,11 @@ export default class Load extends Panel {
 		this.selected = this.selected == key ? null : key;
 	}
 	load() {
-		if (this.cmd !== '' && this.confirm != 'load') { this.confirm = 'load'; }
+		if (this.query['cmd'] && this.confirm != 'load') { this.confirm = 'load'; }
 		else {
 			this.confirm = null;
 			if (this.selected) {
-				this.cmd = this.preview;
+				this.query['cmd'] = this.preview;
 				this.cancel();
 			}
 		}

@@ -1,5 +1,7 @@
 import {State} from '../panel';
 
+function today() { return moment().format('YYYY-MM-DD'); }
+
 var key = 0;
 export class Parameter {
 	private parent: number = key;

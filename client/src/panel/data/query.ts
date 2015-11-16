@@ -88,7 +88,7 @@ export default class Query extends Panel {
 					!this.pending && (this.cancelled || this.completed)
 						? m('button', {onclick: this.query.bind(this), disabled: !this.queryable}, Panel.icon(this.plain ? 'e/cycle' : 'e/magnifying-glass'))
 						: m('button', {onclick: this.stop.bind(this)}, Panel.icon('e/controller-stop')),
-					m('span.cmd', this.preview)
+					m('span', {class: this.name ? 'name' : 'cmd'}, this.preview)
 				], [
 					m('span', this.loadedRows, ' / ', this.totalRows),
 					m('button', {onclick: () => this.table()}, 'View Data'),

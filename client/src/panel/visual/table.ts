@@ -61,6 +61,7 @@ export default class Table extends Panel {
 			this.$height = parseFloat(style.height);
 			m.redraw();
 		}
+		if (!isInit && this.offset > 0) { el.scrollTop = this.$height * this.offset; }
 	}
 	view() {
 		var cols = this.$data.cols || [], rows = this.$data.rows;
@@ -93,7 +94,7 @@ export default class Table extends Panel {
 				: Panel.toolbar(
 					m('span', m('span.type', 'Table'), ' with ',
 						(rows.length == 0 ? 'no rows' : rows.length == 1 ? '1 row' : (rows.length + ' rows')),
-						' and ', (cols.length == 0 ? 'no columns' : rows.length == 1 ? '1 column' : (rows.length + ' columns')),
+						' and ', (cols.length == 0 ? 'no columns' : cols.length == 1 ? '1 column' : (cols.length + ' columns')),
 						'.'
 					),
 					null)

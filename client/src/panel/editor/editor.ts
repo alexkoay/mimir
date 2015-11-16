@@ -21,7 +21,7 @@ export default class Editor extends Panel {
 	constructor(state: State) {
 		super(state);
 		this.cmd = state['cmd'];
-		this.auto = state['auto'] || false;
+		this.auto = 'auto' in state ? state['auto'] : true;
 		this.wait = state['wait'] || 1.0;
 		this.last = state['last'] || null;
 	}
