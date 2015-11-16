@@ -30,6 +30,7 @@ export class NodeList {
 
 	// properties
 	get length() { return this.$list.length; }
+	get last() { return this.length > 0 ? this.$list[this.length-1] : null; }
 
 	// accessors
 	at(pos: number) { return this.$list[pos] || null; }
@@ -46,7 +47,7 @@ export class NodeList {
 		this.prune();
 		var list = this.$list.slice();
 		if (reverse) { list.reverse(); }
-		list.forEach(child => { fn(child); child.children.depth(fn, reverse); });
+		list.forEach(child => { fn(child); child.children && child.children.depth(fn, reverse); });
 	}
 	collect(reverse?: boolean) {
 		var list: Node[] = [];
@@ -84,11 +85,12 @@ export class NodeList {
 			next = this.initialize(<State> state);
 		}
 
-		next.children.adopt(node.children, 0);
+		next.children && next.children.adopt(node.children, 0);
 		this.$list[pos] = next;
 		return next;
 	}
 	adopt(other: NodeList, pos?: number) {
+		if (!other) { return this; }
 		other.reparent(this.$self);
 		if (pos === undefined) { Array.prototype.push.apply(this.$list, other.$list); }
 		else { Array.prototype.splice.bind(this.$list, pos, 0).apply(null, other.$list); }
@@ -100,11 +102,11 @@ export class NodeList {
 		if (pos < 0) { return false; }
 
 		this.$list.splice(pos, 1);
-		if (!disown) { this.adopt(node.children, pos); }
+		if (!disown && node.children) { this.adopt(node.children, pos); }
 		return true;
 	}
 	prune(recurse?: boolean) {
-		if (recurse) { this.$list.forEach(child => child.children.prune(true)); }
+		if (recurse) { this.$list.forEach(child => child.children && child.children.prune(true)); }
 		this.$list = this.$list.filter(child => !child.dead());
 		return this;
 	}
@@ -117,6 +119,7 @@ export default class Node {
 	private $key: number = ++key;
 	private $type: string;
 	protected parent: NodeList;
+	error: any = null;
 	children: NodeList = new NodeList(this);
 
 	constructor(state: State) { this.$type = state.type || null; }

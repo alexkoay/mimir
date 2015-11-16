@@ -14,7 +14,7 @@ export default class Panel extends Node {
 		this.$close = state['close'] || false;
 	}
 
-	dead() { return this.$close && this.children.length == 0; }
+	dead() { return this.$close && (!this.children || this.children.length == 0); }
 	state() { return super.state().include({close: this.$close}); }
 
 	minimize(val?: boolean) { this.$minimize = val === undefined ? !this.$minimize : val; return this; }

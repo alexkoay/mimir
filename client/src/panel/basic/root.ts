@@ -1,5 +1,6 @@
-import Socket from '../socket';
-import Node, {State, NodeList} from './node';
+
+import Socket from '../../socket';
+import Node, {State, NodeList} from '../node';
 
 export default class Root extends Node {
 	private socket: Socket;

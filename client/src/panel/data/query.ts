@@ -8,7 +8,6 @@ export default class Query extends Panel {
 	private socket: Socket = null;
 	name: string;
 	cmd: string;
-	error: string;
 
 	params: {[key: string]: any};
 	private $parsed: string;
@@ -22,15 +21,6 @@ export default class Query extends Panel {
 		this.cmd = state['cmd'];
 		this.params = state['params'] || null;
 		this.name = state['name'] || null;
-		this.error = state['error'] || null;
-		if (this.error) {
-			if (this.params) {
-				this.error = null;
-				this.params = null;
-			}
-			else { this.$close = true; }
-		}
-
 		this.process();
 	}
 	inherit(parent: NodeList, will: any) {
@@ -44,11 +34,10 @@ export default class Query extends Panel {
 	}
 	will() { return {socket: this.socket, data: this.data}; }
 	dead() { return this.$close; }
-	state() { return super.state().include({name: this.name, cmd: this.cmd, params: this.params, error: this.error}); }
+	state() { return super.state().include({name: this.name, cmd: this.cmd, params: this.params}); }
 
 	// model ///////////////////////////////////////////////////////////////////
 
-	get isError() { return !!this.error; }
 	get pending() { return this.data.pending; }
 	get cancelled() { return this.data.cancelled; }
 	get completed() { return this.data.completed; }
@@ -70,7 +59,7 @@ export default class Query extends Panel {
 
 	process() {
 		try { eval('this._process`' + this.cmd + '`'); }
-		catch (e) { this.fail(e.toString()); }
+		catch (e) { window.setTimeout(() => { this.fail(e.toString()); m.redraw(); }, 0); }
 	}
 	private _process(cmds: string[], ...args: any[]) {
 		if (cmds.length == 1) { this.$parsed = this.cmd; }
@@ -105,14 +94,12 @@ export default class Query extends Panel {
 	query() {
 		if (this.dead()) { return; }
 		if (this.params && !this.paramsPopulated) { return; }
-		if (!this.params && this.error) { return; }
-		this.error = null;
 		this.data.query(this.params)
 			.then(this.table.bind(this, true), this.fail.bind(this))
 			.catch(console.log.bind(console, 'error'));
 	}
 	stop() { this.data.cancel(); }
-	fail(msg: string) { this.error = msg; }
+	fail(msg: string) { this.parent.change(this, {type: 'error', error: msg}); }
 	table(auto?: boolean) {
 		if (auto && this.children.length != 0) { return; }
 		this.children.create({type: 'visual/table'});
@@ -130,28 +117,25 @@ export default class Query extends Panel {
 		}
 		else {
 			return super.view(null,
-				this.error && !this.params ? null : [
-					Panel.toolbar([
-						!this.pending && (this.cancelled || this.completed)
-							? (this.params
-								? m('button', {onclick: this.query.bind(this), disabled: !this.paramsPopulated}, Panel.icon('e/magnifying-glass'))
-								: m('button', {onclick: this.query.bind(this)}, Panel.icon('e/cycle')))
-							: m('button', {onclick: this.stop.bind(this)}, Panel.icon('e/controller-stop')),
-						m('span.cmd', this.preview)
-					], [
-						m('span', this.loadedRows, ' / ', this.totalRows),
-						m('button', {onclick: () => this.table()}, 'View Data')
-					]),
-					!this.params ? null : m('form', {onsubmit: (e: Event) => { e.preventDefault(); this.query(); }},
-						Object.keys(this.params).map(key =>
-							m('span.param',
-								m('label', {for: this.key + '-param-' + key}, key),
-								m('input', {id: this.key + '-param-' + key, oninput: (e: Event) => this.update(key, (<HTMLInputElement> e.target).value), value: this.params[key]})
-							)
+				Panel.toolbar([
+					!this.pending && (this.cancelled || this.completed)
+						? (this.params
+							? m('button', {onclick: this.query.bind(this), disabled: !this.paramsPopulated}, Panel.icon('e/magnifying-glass'))
+							: m('button', {onclick: this.query.bind(this)}, Panel.icon('e/cycle')))
+						: m('button', {onclick: this.stop.bind(this)}, Panel.icon('e/controller-stop')),
+					m('span.cmd', this.preview)
+				], [
+					m('span', this.loadedRows, ' / ', this.totalRows),
+					m('button', {onclick: () => this.table()}, 'View Data')
+				]),
+				!this.params ? null : m('form', {onsubmit: (e: Event) => { e.preventDefault(); this.query(); }},
+					Object.keys(this.params).map(key =>
+						m('span.param',
+							m('label', {for: this.key + '-param-' + key}, key),
+							m('input', {id: this.key + '-param-' + key, oninput: (e: Event) => this.update(key, (<HTMLInputElement> e.target).value), value: this.params[key]})
 						)
 					)
-				],
-				this.error ? m('samp.error', this.error) : null
+				)
 			);
 		}
 	}
