@@ -117,6 +117,7 @@ export default class Socket {
 
 	_onopen() {
 		this.$reconnect = 0;
+		this.$granted = false;
 		this.status = 'Connected.';
 	}
 	_onclose() {
@@ -140,8 +141,7 @@ export default class Socket {
 		this.status = 'Connecting...';
 
 		// clear state
-		this.$ready = false;
-		this.$granted = false;
+		this.ready = false;
 
 		// remove old connections
 		if (this.$conn) {
