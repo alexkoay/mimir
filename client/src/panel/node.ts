@@ -98,7 +98,6 @@ export class NodeList {
 	}
 	delete(node: Node, disown?: boolean) {
 		var pos = this.pos(node);
-		console.log('found', pos);
 		if (pos < 0) { return false; }
 
 		this.$list.splice(pos, 1);

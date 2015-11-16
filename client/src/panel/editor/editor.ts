@@ -100,7 +100,7 @@ export default class Editor extends Panel {
 
 	// view ////////////////////////////////////////////////////////////////////
 
-	view(): MithrilVirtualElement {
+	view() {
 		return super.view(
 			{ class: this.capture ? 'capture' : null },
 			[

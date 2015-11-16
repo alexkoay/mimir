@@ -62,7 +62,7 @@ export default class Table extends Panel {
 			m.redraw();
 		}
 	}
-	view(): MithrilVirtualElement {
+	view() {
 		var cols = this.$data.cols || [], rows = this.$data.rows;
 		var data = rows.slice(this.renderFirst, this.renderLast);
 		return super.view(null, [
