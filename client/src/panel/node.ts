@@ -134,6 +134,7 @@ export default class Node {
 	// node state
 	dead() { return true; }
 	state() { return new Extendable(this.type); }
+	view(...any: any[]): any { return null; }
 }
 
 /* interactions

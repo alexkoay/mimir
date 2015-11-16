@@ -30,15 +30,26 @@ export default class Panel extends Node {
 			(attr.class || '')
 		].join(' ');
 
-		return m('div.panel', attr,
-			m('div.control.left',
-				this.$minimize === null ? null : (!this.$minimize
-					? m('button.min', {onclick: this.minimize.bind(this, true)}, Panel.icon('e/triangle-down'))
-					: m('button.max', {onclick: this.minimize.bind(this, false)}, Panel.icon('e/triangle-right')))
+		var tree = 'reverse';
+		if ('tree' in attr) {
+			if (!attr.tree) { tree = 'hide'; }
+			else if (typeof attr.tree === 'string') { tree = attr.tree.toLowerCase(); }
+		}
+		var children = (tree === 'hide' || !this.children) ? null : this.children.map(child => child.view());
+		if (tree === 'reverse' && children) { children.reverse(); }
+
+		return [
+			m('div.panel', attr,
+				m('div.control.left',
+					this.$minimize === null ? null : (!this.$minimize
+						? m('button.min', {onclick: this.minimize.bind(this, true)}, Panel.icon('e/triangle-down'))
+						: m('button.max', {onclick: this.minimize.bind(this, false)}, Panel.icon('e/triangle-right')))
+				),
+				m('div.control.right', m('button.close', {onclick: this.close.bind(this)}, Panel.icon('e/cross'))),
+				m('div.content', elements)
 			),
-			m('div.control.right', m('button.close', {onclick: this.close.bind(this)}, Panel.icon('e/cross'))),
-			m('div.content', elements)
-		);
+			children
+		];
 	}
 }
 
