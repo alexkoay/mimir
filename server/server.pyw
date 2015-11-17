@@ -37,6 +37,12 @@ class Session:
         self._user = None
         self._db, self._cur = None, None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        yield from self.done()
+
     ## socket ##################################################################
 
     @asyncio.coroutine
@@ -194,8 +200,9 @@ class Session:
 
 @asyncio.coroutine
 def handler(socket, path):
-    try: yield from Session(socket).run()
-    except ws.InvalidState: pass
+    with Session(socket) as sess:
+        try: yield from sess.run()
+        except ws.InvalidState: pass
 
 @click.command()
 @click.argument('authdb')
@@ -208,10 +215,8 @@ def main(authdb, querydb):
     Session.dsn = querydb
 
     server = asyncio.ensure_future(ws.serve(handler, 'localhost', 8765))
-    try:
-        loop.run_forever()
-    finally:
-        loop.close()
+    try: loop.run_forever()
+    finally: loop.close()
 
 if __name__ == '__main__':
     main()
