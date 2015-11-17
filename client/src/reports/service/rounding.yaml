@@ -1,6 +1,5 @@
 type: data/query
 name: WIP Rounding
-auto: true
 cmd: |
     WITH wip AS (
         SELECT p.company, p.wipno,

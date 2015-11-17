@@ -47,7 +47,7 @@ export class NodeList {
 		this.prune();
 		var list = this.$list.slice();
 		if (reverse) { list.reverse(); }
-		list.forEach(child => { fn(child); child.children && child.children.depth(fn, reverse); });
+		list.forEach(child => { fn(child); child.children.depth(fn, reverse); });
 	}
 	collect(reverse?: boolean) {
 		var list: Node[] = [];
@@ -85,12 +85,11 @@ export class NodeList {
 			next = this.initialize(<State> state);
 		}
 
-		next.children && next.children.adopt(node.children, 0);
+		next.children.adopt(node.children, 0);
 		this.$list[pos] = next;
 		return next;
 	}
 	adopt(other: NodeList, pos?: number) {
-		if (!other) { return this; }
 		other.reparent(this.$self);
 		if (pos === undefined) { Array.prototype.push.apply(this.$list, other.$list); }
 		else { Array.prototype.splice.bind(this.$list, pos, 0).apply(null, other.$list); }
@@ -101,11 +100,11 @@ export class NodeList {
 		if (pos < 0) { return false; }
 
 		this.$list.splice(pos, 1);
-		if (!disown && node.children) { this.adopt(node.children, pos); }
+		if (!disown) { this.adopt(node.children, pos); }
 		return true;
 	}
 	prune(recurse?: boolean) {
-		if (recurse) { this.$list.forEach(child => child.children && child.children.prune(true)); }
+		if (recurse) { this.$list.forEach(child => child.children.prune(true)); }
 		this.$list = this.$list.filter(child => !child.dead());
 		return this;
 	}
@@ -123,7 +122,7 @@ export default class Node {
 
 	constructor(state: State) { this.$type = state.type || null; }
 	inherit(parent: NodeList, will: any): void { this.parent = parent; }
-	will(): any { return null; }
+	will(): any { return {}; }
 
 	// fixed (doesn't need to be overridden except in extraordinary situations)
 	get key() { return this.$key; }

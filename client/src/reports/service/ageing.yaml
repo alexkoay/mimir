@@ -1,6 +1,5 @@
 type: data/query
 name: WIP Ageing
-auto: true
 cmd: |
     WITH trans AS (
         SELECT

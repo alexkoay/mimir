@@ -35,8 +35,8 @@ export default class Panel extends Node {
 			if (!attr.tree) { tree = 'hide'; }
 			else if (typeof attr.tree === 'string') { tree = attr.tree.toLowerCase(); }
 		}
-		var children = (tree === 'hide' || !this.children) ? null : this.children.map(child => child.view());
-		if (tree === 'reverse' && children) { children.reverse(); }
+		var children = tree === 'hide' ? null : this.children.map(child => child.view());
+		if (tree === 'reverse') { children.reverse(); }
 
 		return [
 			m('div.panel', attr,

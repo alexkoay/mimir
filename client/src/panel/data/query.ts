@@ -64,8 +64,11 @@ export default class Query extends Panel {
 	}
 	stop() { this.data.cancel(); }
 	fail(msg: string) {
-		this.error = msg;
-		this.parent.change(this, {type: 'error', error: msg});
+		if (this.plain) {
+			this.error = msg;
+			this.parent.change(this, {type: 'error', error: msg});
+		}
+		else { this.children.create({type: 'error', error: msg}); }
 	}
 	table(auto?: boolean) {
 		if (auto && this.children.length != 0) { return; }

@@ -52,7 +52,7 @@ export default class Command {
 
 	constructor(state: State) {
 		this.restore = state['param'] || {};
-		this.edit = state['edit'] || true;
+		this.edit = 'edit' in state ? !!state['edit'] : true;
 		eval('this.process`' + state['cmd'] + '`');
 	}
 	private process(cmds: string[], ...args: any[]) {
