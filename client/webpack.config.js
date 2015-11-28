@@ -15,7 +15,7 @@ module.exports = [
     name: 'reports',
     entry: './src/reports/base',
     output: { filename: 'mimir.reports.js', library: ['mimir', 'Reports'] },
-    resolve: { extensions: ['', '.js', '.yaml'] },
+    resolve: { extensions: ['', '.js'] },
     module: {
       loaders: [
         { test: /\.js$/, loader: 'babel' },

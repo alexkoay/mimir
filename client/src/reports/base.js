@@ -1,10 +1,13 @@
 
 var list = {};
 
-var ctx = require.context('./', true, /^.\/.+\/base$/);
+var ctx = require.context('./', true, /^.\/.+\.yaml$/);
 ctx.keys().forEach(key => {
-	var sub = ctx(key);
-	Object.keys(sub).forEach(query => list[key.substring(2, key.length-4) + query] = sub[query]);
+	var query = ctx(key);
+
+	if (query.name) { name = key.substring(2, key.lastIndexOf('/')+1) + query.name; }
+	else { name = key.substring(2, key.lastIndexOf('.')); }
+	list[name] = query;
 });
 
 export default list;
