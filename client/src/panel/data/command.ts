@@ -64,7 +64,7 @@ export default class Command {
 			this.plain = false;
 
 			this.param = {};
-			this.cmd = cmds[0];
+			this.cmd = cmds[0].replace('%', '%%');
 			args.forEach((arg: any, i: number) => {
 				var p = new Parameter(arg, this.restore);
 				if (!(p.key in this.param)) { this.param[p.key] = p; }
