@@ -91,8 +91,8 @@ export class NodeList {
 	}
 	adopt(other: NodeList, pos?: number) {
 		other.reparent(this.$self);
-		if (pos === undefined) { Array.prototype.push.apply(this.$list, other.$list); }
-		else { Array.prototype.splice.bind(this.$list, pos, 0).apply(null, other.$list); }
+		if (pos === undefined) { this.$list.push(...other.$list); }
+		else { this.$list.splice(pos, 0, ...other.$list); }
 		return this;
 	}
 	delete(node: Node, disown?: boolean) {

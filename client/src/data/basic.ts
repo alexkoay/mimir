@@ -24,7 +24,7 @@ export default class Basic {
 		this._update();
 	}
 	insert(rows: any[][]) {
-		Array.prototype.push.apply(this.rows, rows);
+		this.rows.push(...rows);
 		this._update();
 	}
 
