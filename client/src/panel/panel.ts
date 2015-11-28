@@ -11,7 +11,6 @@ export default class Panel extends Node {
 
 	constructor(state: State) {
 		super(state);
-		m.redraw.strategy('all');
 		this.$close = state['close'] || false;
 	}
 
