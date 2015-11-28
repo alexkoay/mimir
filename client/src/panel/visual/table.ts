@@ -1,7 +1,7 @@
 import Data from '../../data/basic';
 import Panel, {State, NodeList} from '../panel';
 
-export function get_string(val: any, type: string) {
+export function get_string(val: any, type: string): string {
 	if (val === null) { return ''; }
 	//else if (moment.isMoment(val)) { return val.format('Do MMM YYYY, HH:mm:ss').replace('T', ' '); }
 	/*else if (moment.isDuration(val)) {
@@ -15,9 +15,11 @@ export default class Table extends Panel {
 	private $data: Data;
 
 	offset: number = 0;
+
 	private $count: number = 10;
 	private $header: number = null;
 	private $height: number = null;
+	private $scroll: boolean = false;
 
 	constructor(state: State) {
 		super(state);
@@ -26,6 +28,8 @@ export default class Table extends Panel {
 	inherit(parent: NodeList, will: any): void {
 		super.inherit(parent, will);
 		this.$data = will.data;
+		// this.offset = 0;
+		// this.$scroll = true;
 	}
 	will() { return {data: this.$data}; }
 	state() { return super.state().include({}); }
@@ -39,66 +43,83 @@ export default class Table extends Panel {
 
 	// controller //////////////////////////////////////////////////////////////
 
-	scroll(e: UIEvent) {
-		var el = <HTMLElement> e.target;
+	measure(el: HTMLElement) {
+		if (this.$data.rows.length == 0 || this.$data.cols.length == 0) { return; }
+
+		var row = el.querySelector('table.sticky thead');
+		if (row) {
+			var style = window.getComputedStyle(row);
+			this.$header = parseFloat(style.height);
+		}
+
+		row = el.querySelector('table.data tbody tr.row');
+		if (row) {
+			style = window.getComputedStyle(row);
+			this.$height = parseFloat(style.height);
+		}
+
+		var count = Math.ceil(el.clientHeight / this.$height) || 10;
+		if (this.$count != count) { this.$count = count; m.redraw(); }
+	}
+	autowidth(el: HTMLElement) {
+		var src = el.querySelectorAll('table.data th');
+		var dst = el.querySelectorAll('table.sticky th');
+		for (var i=0; i<src.length; ++i) {
+			let style = window.getComputedStyle(<Element> src[i]);
+			(<HTMLElement> dst[i]).style.width = style.width;
+		}
+	}
+	scroll(el: HTMLElement) {
 		this.offset = Math.max(Math.floor((el.scrollTop - this.$header) / this.$height) || 0, 0);
-		this.$count = Math.ceil(el.clientHeight / this.$height) || 10;
+		this.$count = Math.ceil(el.clientHeight / (this.$height || 10)) || 10;
+		(<HTMLElement> el.querySelector('table.sticky')).style.top = el.scrollTop + "px";
 	}
 
 	// view ////////////////////////////////////////////////////////////////////
 
 	config(el: HTMLElement, isInit: boolean) {
-		if (!this.$header) {
-			let row = el.querySelector('thead');
-			if (!row) { return; }
-			let style = window.getComputedStyle(row);
-			this.$header = parseFloat(style.height);
+		if (!this.$header || !this.$height) { this.measure(el); }
+		this.autowidth(el);
+		if (this.$scroll) {
+			this.scroll(el);
+			this.$scroll = false;
 		}
-		if (!this.$height) {
-			let row = el.querySelector('tbody tr.row');
-			if (!row) { return; }
-			let style = window.getComputedStyle(row);
-			this.$height = parseFloat(style.height);
-			m.redraw();
-		}
-		if (!isInit && this.offset > 0) { el.scrollTop = this.$height * this.offset; }
 	}
+
 	view() {
 		var cols = this.$data.cols || [], rows = this.$data.rows;
 		var data = rows.slice(this.renderFirst, this.renderLast);
-		return super.view(null, [
-			m('div.container',
-				{class: this.$minimize ? 'hide' : '', onscroll: this.scroll.bind(this), config: this.config.bind(this)},
-				cols.length == 0 || rows.length == 0 ? null : m('table',
-					m('thead',
-						m('tr.name', cols.map(col => m('th', {class: col[1]}, col[0])), m('th')),
-						m('tr.type', cols.map(col => m('td', {class: col[1]}, col[1])))),
-					m('tbody',
-						m('tr.before', {style: 'height:' + (this.renderFirst * this.$height) + 'px'}),
-						data.map((row, i) =>
-							m('tr.row',
-								{class: ((i+this.renderFirst) % 2 == 0) ? 'even' : 'odd'},
-								row.map((col, j) => {
-									var str = get_string(col, cols[j][1]);
-									var lines = str.split('\n');
 
-									return m('td',
-										{class: cols[j][1], title: str},
-										m('div', lines.length > 1 ? m('span.more', '\u2026') : null, lines[0]));
-								}), m('td'))),
-						m('tr.after', {style: 'height:' + ((rows.length - this.renderLast) * this.$height) + 'px'})
-					)
-				)
-			),
-			!(this.$minimize || cols.length == 0 || rows.length == 0) ? null
-				: Panel.toolbar(
-					m('span', m('span.type', 'Table'), ' with ',
-						(rows.length == 0 ? 'no rows' : rows.length == 1 ? '1 row' : (rows.length + ' rows')),
-						' and ', (cols.length == 0 ? 'no columns' : cols.length == 1 ? '1 column' : (cols.length + ' columns')),
-						'.'
-					),
-					null)
-		]);
+		var header = m('thead',
+			m('tr.name', cols.map(col => m('th', {class: col[1]}, col[0])), m('th')),
+			m('tr.type', cols.map(col => m('td', {class: col[1]}, col[1])))
+		);
+		var body = m('tbody',
+			m('tr.before', {style: 'height:' + (this.renderFirst * this.$height) + 'px'}),
+			data.map((row, i) => m('tr.row',
+				{class: ((i+this.renderFirst) % 2 == 0) ? 'even' : 'odd'},
+				row.map((col, j) => {
+					var full = get_string(col, cols[j][1]);
+					var lines = full.split('\n');
+					return m('td',
+						{class: cols[j][1], title: full},
+						m('div', lines.length > 1 ? m('span.more', '\u2026') : null, lines[0].trim()));
+				}),
+				m('td'))),
+			m('tr.after', {style: 'height:' + ((rows.length - this.renderLast) * this.$height) + 'px'})
+		);
+
+		var pluralise = (num: number, dim: string) => num == 0 ? ('no ' + dim + 's') : (num + ' ' + dim + (num > 1 ? 's' : ''));
+
+		var min = (this.$minimize || cols.length == 0 || rows.length == 0);
+		return super.view(null,
+			!min ? null
+				: Panel.toolbar(m('span', m('span.type', 'Table'), ' with ', pluralise(rows.length, 'row'), ' and ', pluralise(cols.length, 'column'), '.')),
+			m('div.container',
+				{class: min ? 'hide' : '', onscroll: (e: UIEvent) => this.scroll(<HTMLElement> e.target), config: this.config.bind(this)},
+				m('table.sticky', header),
+				m('table.data', header, body)
+			));
 	}
 }
 

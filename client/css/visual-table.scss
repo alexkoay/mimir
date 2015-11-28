@@ -1,12 +1,12 @@
 .visual-table {
-	.content {
-		min-width: 0;
-		.container {
-			overflow: auto;
-			max-height: 50vh;
-			&.hide { display: none; }
-		}
+	.content { min-width: 0; }
+	.container {
+		position: relative;
+		overflow: auto;
+		max-height: 50vh;
+		&.hide { visibility: collapse; }
 	}
+
 	table {
 		border-spacing: 0;
 		line-height: 1.5;
@@ -29,5 +29,12 @@
 				span.more { float: right; }
 			}
 		}
+	}
+
+	table.sticky {
+		position: absolute;
+		table-layout: fixed;
+		width: 100%;
+		thead { background: #fff; }
 	}
 }
