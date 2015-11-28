@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+import sys
 import json
 import click
 import hashlib
@@ -9,6 +11,25 @@ import traceback
 
 import aiopg, psycopg2 as pg
 import asyncio, websockets as ws
+
+## logging #####################################################################
+
+def log_line(cat, *args, **kwargs):
+    if logdir is not None:
+        global logdate, logfile
+        today = datetime.date.today()
+        if logdate is None or logdate < today:
+            logdate = today
+            if logfile is not None: logfile.close()
+            logfile = open(os.path.join(logdir, '{:%Y%m%d}.log'.format(logdate)), 'a+')
+
+    kwargs['file'] = logfile
+    print('{} [{}]'.format(datetime.datetime.now(), cat.upper()), *args, **kwargs)
+    logfile.flush()
+
+
+def log_info(*args, **kwargs): log_line('INFO', *args, **kwargs)
+def log_error(*args, **kwargs): log_line('ERROR', *args, **kwargs)
 
 ## encoder #####################################################################
 
@@ -88,8 +109,8 @@ class Session:
                 else:
                     yield from self.send('!Invalid request')
             except Exception as e:
-                print(traceback.format_exc())
-                yield from self.send('!Unknown error')
+                log_error(traceback.format_exc(), file=logfile)
+                yield from self.send('!Unknown error\n\n{}\n\n{}'.format(cmd, traceback.format_exc()))
 
     ## methods #################################################################
 
@@ -111,7 +132,7 @@ class Session:
         try:
             self._db = yield from aiopg.connect('{} user={}'.format(Session.dsn, user))
         except pg.Error as e:
-            print(e)
+            log_error(e, file=logfile)
             yield from self.send('!Error connecting to database')
             return False
 
@@ -207,7 +228,14 @@ def handler(socket, path):
 @click.command()
 @click.argument('authdb')
 @click.argument('querydb')
-def main(authdb, querydb):
+@click.option('--log', default=None, type=click.Path(exists=True, file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True))
+def main(authdb, querydb, log=None):
+    global logdir, logfile, logdate
+    logdir = log
+    logdate = None
+    logfile = sys.stderr if logdir is None else None
+    log_info('server started')
+
     loop = asyncio.get_event_loop()
 
     global pool
