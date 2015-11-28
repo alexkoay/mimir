@@ -97,8 +97,8 @@ export default class Query extends Panel {
 					!this.pending ? m('button', {onclick: this.edit.bind(this)}, 'Edit') : null
 				], [
 					m('span', this.loadedRows, ' / ', this.totalRows),
-					m('button', {onclick: () => this.table()}, 'View Data'),
-					m('button', {onclick: () => this.data.xlsx()}, 'Export')
+					m('button', {onclick: () => this.table(), disabled: this.pending}, 'View Data'),
+					m('button', {onclick: () => this.data.xlsx(), disabled: this.pending || !this.completed}, 'Export')
 				]),
 				this.$cmd.view({onsubmit: (e: Event) => { e.preventDefault(); this.query(); }})
 			);
