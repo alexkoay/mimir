@@ -55,6 +55,7 @@ export default class Query extends Panel {
 
 	// controller //////////////////////////////////////////////////////////////
 
+	close() { this.stop(); return super.close(); }
 	query() {
 		if (this.dead()) { return; }
 		if (!this.queryable) { return; }
@@ -78,7 +79,7 @@ export default class Query extends Panel {
 	// view ////////////////////////////////////////////////////////////////////
 
 	view() {
-		if (!this.socket) { return super.view({tree: false}, Panel.toolbar(m('span.error', 'No connection to query.'), null)); }
+		if (!this.socket) { return super.view({tree: false}, Panel.toolbar(m('span.error', 'No connection to query.'))); }
 		else if (!this.socket.granted) {
 			return super.view({tree: false}, Panel.toolbar(
 				[m('span.type', 'Query'), m('span.cmd', this.preview)],

@@ -29,7 +29,7 @@ export default class Report extends Panel {
 	view() {
 		var list = this.keys;
 		return super.view({class: 'listing'},
-			Panel.toolbar(m('button', {onclick: this.load.bind(this), disabled: this.selected === null}, 'Load'), null),
+			Panel.toolbar(m('button', {onclick: this.load.bind(this), disabled: this.selected === null}, 'Load')),
 			m('ul', list.length > 0
 				? [list.map((key: string) => m('li', {key: key, class: key == this.selected ? 'selected' : '', onclick: () => this.select(key)}, key)), m('li.empty', 'End of list.')]
 				: m('li.empty', 'No reports found.')

@@ -2,7 +2,7 @@ import Node, {State, NodeList} from './node';
 export {State, NodeList};
 
 export default class Panel extends Node {
-	static toolbar(left: any, right: any) { return m('div.toolbar', left, m('span.spacer'), right); }
+	static toolbar(left: any, right?: any) { return m('div.toolbar', left, m('span.spacer'), right); }
 	static icon(name: string): MithrilVirtualElement { return m('svg.icon', m('use', {href: 'icon/' + icon_data[name]})); }
 	static checkbox(attrs: {id: String, [key: string]: any}, label: string): MithrilVirtualElement { return m('span', m('input[type=checkbox]', attrs), m('label', {for: attrs.id}, label)); }
 
