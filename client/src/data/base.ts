@@ -1,4 +1,4 @@
 import Basic from './basic';
-// import Query from './query';
+import Query from './query';
 
-export default {Basic};
+export default {Basic, Query};

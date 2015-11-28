@@ -1,31 +1,10 @@
 
-interface XLSXCell {
-	v: any;
-	t: string;
-
-	w?: string;
-	f?: string;
-	r?: string;
-	h?: string;
-	c?: string;
-	z?: string;
-	l?: string;
-	s?: string;
-}
-interface XLSXSheet {
-	[cell: string]: XLSXCell;
-}
-
-
 var key = 0;
 export default class Basic {
 	protected id: number = ++key;
 	cols: [string, string][];
 	rows: any[][];
 	hash: number = new Date().getTime();
-
-	private $xlsx: {promise: Promise<any>, ok: {(): void}, fail: {(): void}} = null;
-
 	onchange: {(data: Basic): void} = (data: Basic) => {};
 
 	constructor(cols: [string, string][], rows?: any[][]) {
