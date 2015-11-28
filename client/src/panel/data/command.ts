@@ -58,7 +58,7 @@ export default class Command {
 	private process(cmds: string[], ...args: any[]) {
 		if (cmds.length == 1) {
 			this.plain = true;
-			this.cmd = cmds[0];
+			this.cmd = cmds[0].replace('%', '%%');
 		}
 		else {
 			this.plain = false;
@@ -71,7 +71,7 @@ export default class Command {
 				else { p = this.param[p.key]; }
 
 				this.cmd += p.parameter();
-				this.cmd += cmds[i+1];
+				this.cmd += cmds[i+1].replace('%', '%%');
 			});
 		}
 	}
