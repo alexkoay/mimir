@@ -56,6 +56,7 @@ export default class Query extends Panel {
 	// controller //////////////////////////////////////////////////////////////
 
 	close() { this.stop(); return super.close(); }
+	edit() { this.children.create({type: 'editor', cmd: this.cmd}); }
 	query() {
 		if (this.dead()) { return; }
 		if (!this.queryable) { return; }
@@ -92,7 +93,8 @@ export default class Query extends Panel {
 					!this.pending && (this.cancelled || this.completed)
 						? m('button', {onclick: this.query.bind(this), disabled: !this.queryable}, Panel.icon(this.plain ? 'e/cycle' : 'e/magnifying-glass'))
 						: m('button', {onclick: this.stop.bind(this)}, Panel.icon('e/controller-stop')),
-					m('span', {class: this.name ? 'name' : 'cmd'}, this.preview)
+					m('span', {class: this.name ? 'name' : 'cmd'}, this.preview),
+					!this.pending ? m('button', {onclick: this.edit.bind(this)}, 'Edit') : null
 				], [
 					m('span', this.loadedRows, ' / ', this.totalRows),
 					m('button', {onclick: () => this.table()}, 'View Data'),
