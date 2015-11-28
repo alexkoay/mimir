@@ -14,6 +14,7 @@ export default class Socket {
 	private $conn: WebSocket = null;
 	private $status: string = '';
 	private $reconnect: number = 0;
+	private $timer: number = null;
 
 	// authentication
 	private $auth: {response: {(): void}, promise: LoginPromise} = null;
@@ -125,7 +126,7 @@ export default class Socket {
 	_onclose() {
 		var delay: number = Math.random() * fib[Math.min(this.$reconnect, fib.length - 1)];
 		this.status = 'Reconnecting in ' + Math.ceil(delay) + ' seconds... (#' + (++this.$reconnect) + ')';
-		window.setTimeout(this.connect.bind(this), delay * 1000);
+		this.$timer = window.setTimeout(this.connect.bind(this), delay * 1000);
 	}
 	_onmessage(msg: {data: any; type: string; target: WebSocket}) {
 		if (this.$debug) { console.log('recv:', msg.data.slice(0, 30)); }
@@ -139,6 +140,7 @@ export default class Socket {
 	set pending(num: number) { this.$pending = num; this.onchange('ready'); }
 
 	connect(force?: boolean): Socket {
+		window.clearTimeout(this.$timer);
 		if (this.connected && !force) { return; }
 		this.status = 'Connecting...';
 
