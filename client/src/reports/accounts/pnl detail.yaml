@@ -1,0 +1,17 @@
+type: data/query
+name: P&L Detail
+cmd: |
+    with nl as (select * from nl_trans where date_trunc('month', posting) = date_trunc('month', ${{key: 'month', name: 'Month', value: today(), type: 'date'}}::date)),
+    coa as (select g.grouping as sort, coalesce(g.descr, c.grouping) as grouping, c.segment, c.franchise, c.detail, c.expense from config.nl_chart c full outer join config.nl_groups g on c.grouping = g.descr),
+    bs as (select * from coa where sort < 100),
+    pnl as (select * from coa where sort >= 100),
+    out as (
+        select sort, grouping, segment, franchise, detail, -sum(value) as total
+        from pnl left join nl on pnl.expense = nl.expense
+        group by sort, grouping, segment, franchise, detail
+        having sum(value) != 0 or sort % 10 = 9)
+    select grouping as "Grouping", segment as "Segment", franchise as "Franchise", detail as "Detail"
+        (case when sort % 10 = 9 then sum(total) over (order by sort) else total end) as "Month Actual",
+        (case when sort % 10 = 9 then round(sum(total) over (order by sort) / first_value(total) over (order by sort) * 100, 2) else null end) as "%"
+    from out
+    order by sort, grouping, segment, franchise, detail

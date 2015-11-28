@@ -58,22 +58,23 @@ export default class Command {
 	private process(cmds: string[], ...args: any[]) {
 		if (cmds.length == 1) {
 			this.plain = true;
-			this.cmd = cmds[0].replace('%', '%%');
+			this.cmd = cmds[0].replace(/%/g, '%%');
 		}
 		else {
 			this.plain = false;
 
 			this.param = {};
-			this.cmd = cmds[0].replace('%', '%%');
+			this.cmd = cmds[0].replace(/%/g, '%%');
 			args.forEach((arg: any, i: number) => {
 				var p = new Parameter(arg, this.restore);
 				if (!(p.key in this.param)) { this.param[p.key] = p; }
 				else { p = this.param[p.key]; }
 
 				this.cmd += p.parameter();
-				this.cmd += cmds[i+1].replace('%', '%%');
+				this.cmd += cmds[i+1].replace(/%/g, '%%');
 			});
 		}
+		console.log(this.cmd);
 	}
 	state() { return {cmd: this.cmd, edit: this.edit, param: this.param}; }
 

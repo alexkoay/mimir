@@ -1,0 +1,19 @@
+type: data/query
+name: Invoiced Vehicles
+cmd: |
+    with nl as (
+        select company, suffix
+        from nl
+        where expense / 10000000 in (5,6,7)
+            and (expense / 1000000) % 10 between 0 and 6
+            and date_trunc('month', posting) = date_trunc('month', ${{key: 'month', name: 'Invoice Month', value: today(), type: 'date'}}::date)
+        group by company, suffix
+    ),
+    inv as (
+        select *
+        from vsb_invoice i
+        where type = 'M' and date_trunc('month', invoiced) = date_trunc('month', ${{key:'month'}}::date)
+            and not exists(select 1 from vsb_invoice i2 where i2.invoiced > i.invoiced and i2.company = i.company and i2.stock = i.stock and type = 'M')
+    ),
+    list as (select inv.company, inv.stock from inv join nl on nl.company = inv.company and nl.suffix = inv.stock)
+    select * from vsb_info where (company, stock) in (select * from list)
