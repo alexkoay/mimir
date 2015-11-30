@@ -93,6 +93,7 @@ export class NodeList {
 		other.reparent(this.$self);
 		if (pos === undefined) { this.$list.push(...other.$list); }
 		else { this.$list.splice(pos, 0, ...other.$list); }
+		other.$list = [];
 		return this;
 	}
 	delete(node: Node, disown?: boolean) {
