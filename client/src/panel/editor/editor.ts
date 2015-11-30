@@ -60,7 +60,7 @@ export default class Editor extends Panel {
 		this.last = <Query> (
 			(this.last
 				&& ((this.auto && val !== undefined) || this.last.error)
-				&& this.children.change(this.last, data))
+				&& this.children.change(this.last.close(), data))
 			|| this.children.create(data));
 
 		if (val !== undefined) { m.redraw(); }
