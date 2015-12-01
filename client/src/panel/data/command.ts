@@ -1,6 +1,6 @@
 import {State} from '../panel';
 
-function today() { return moment().format('YYYY-MM-DD'); }
+function today(days) { return moment().add('days', days || 0).format('YYYY-MM-DD'); }
 
 var key = 0;
 export class Parameter {
