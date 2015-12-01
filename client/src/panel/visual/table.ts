@@ -3,11 +3,14 @@ import Panel, {State, NodeList} from '../panel';
 
 export function get_string(val: any, type: string): string {
 	if (val === null) { return ''; }
-	//else if (moment.isMoment(val)) { return val.format('Do MMM YYYY, HH:mm:ss').replace('T', ' '); }
-	/*else if (moment.isDuration(val)) {
-		if (type === 'interval') { return val.humanize(); }
+	else if (moment.isMoment(val)) {
+		if (type === 'date') { return val.format('Do MMM YYYY'); }
+		else { return val.format('Do MMM YYYY, HH:mm:ss').replace('T', ' '); }
+	}
+	else if (moment.isDuration(val)) {
+		if (type === 'interval') { return moment().add(val).fromNow(); }
 		else { return val.toString(); }
-	}*/
+	}
 	else { return val.toString(); }
 }
 

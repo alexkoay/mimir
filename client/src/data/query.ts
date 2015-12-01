@@ -1,9 +1,20 @@
 import Socket from '../socket';
 import Basic from './basic';
 
+type Transformer = { (val: string): any };
+
+var transform: { [type: string]: Transformer } = {
+	"_": (val: string) => val,
+	numeric: (val: string) => val.length > 0 && parseFloat(val) || null,
+	date: (val: string) => val && moment(val) || null,
+	timestamptz: (val: string) => moment(val),
+	interval: (val:string) => moment.duration(parseFloat(val) * 1000)
+};
+
 export default class Query extends Basic {
 	private socket: Socket;
 	private cmd: string;
+	format: Transformer[] = [];
 
 	private $pending: boolean = false;
 	private $cancel: boolean = false;
@@ -50,11 +61,12 @@ export default class Query extends Basic {
 		this.$pending = false;
 		this.$count = meta[0];
 		super.meta(meta[1]);
+		this.format = meta[1].map(m => transform[m[1]] || transform["_"]);
 		this.onchange(this);
 	}
 	private _data(start: number, rows: any[][]) {
 		if (this.$cancel) { return; }
-		super.insert(rows);
+		super.insert(rows.map(row => row.map((v: string, i: number) => this.format[i](v))));
 
 		// revise the loading buffer
 		var wait = (new Date().getTime() - start) / 1000;
