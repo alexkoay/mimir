@@ -6,7 +6,10 @@ export default class Error extends Panel {
 		if (state['restore']) { this.$close = true; }
 		this.error = state['error'] || 'An unknown error occured.';
 	}
-	state() { return super.state().include({error: this.error, restore: true}); }
+	state() {
+		this.children.each(child => this.children.delete(child));
+		return super.state().include({error: this.error, restore: true});
+	}
 	view() { return super.view({tree: false}, m('samp.error', this.error)); }
 }
 
