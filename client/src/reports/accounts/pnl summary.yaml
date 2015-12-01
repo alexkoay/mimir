@@ -2,7 +2,7 @@ type: data/query
 name: P&L Summary
 cmd: |
     with nl as (select * from nl_trans where date_trunc('month', posting) = date_trunc('month', ${{key: 'month', name: 'Month', value: today(), type: 'date'}}::date)),
-    coa as (select g.grouping as sort, coalesce(g.descr, c.grouping) as grouping, c.segment, c.franchise, c.detail, c.expense from config.nl_chart c full outer join config.nl_groups g on c.grouping = g.descr),
+    coa as (select g.grouping as sort, coalesce(g.descr, c.grouping) as grouping, c.category, c.franchise, c.detail, c.expense from config.nl_chart c full outer join config.nl_groups g on c.grouping = g.descr),
     bs as (select * from coa where sort < 100),
     pnl as (select * from coa where sort >= 100),
     out as (
