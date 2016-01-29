@@ -233,7 +233,7 @@ def main(authdb, querydb, log=None):
     global logdir, logfile, logdate
     logdir = log
     logdate = None
-    logfile = sys.stderr if logdir is None else None
+    logfile = (open('stderr.log', 'w+') if sys.stderr is None else sys.stderr) if logdir is None else None
     log_info('server started')
 
     loop = asyncio.get_event_loop()
