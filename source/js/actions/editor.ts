@@ -44,7 +44,7 @@ export function execute(): Thunk {
 
 		if (state.params) {
 			// check all required
-			if (state.params.some(p => isEmpty(state.args[p.key]))) { return; }
+			if (state.params.some(p => p.req && isEmpty(state.args[p.key]))) { return; }
 
 			// use array
 			if (!state.params.some(p => p._key !== undefined)) { 

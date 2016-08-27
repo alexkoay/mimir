@@ -58,7 +58,6 @@ export default {
 	oninit: function(n: MithrilVNode) {
 		this.$view = new Viewport();
 		this.$view.size = n.attrs.data.rows.length;
-		window.addEventListener('resize', this.resize.bind(this, n.dom));
 	},
 	onbeforeupdate: function(n: MithrilVNode) {
 		this.$view.size = n.attrs.data.rows.length;
@@ -67,6 +66,7 @@ export default {
 	oncreate: function(n: MithrilVNode) {
 		this.resize(n.dom);
 		this.scroll(n.dom);
+		window.addEventListener('resize', this.resize.bind(this, n.dom));
 	},
 	onupdate: function(n: MithrilVNode) { this.scroll(n.dom); },
 	view: function(n: MithrilVNode) {

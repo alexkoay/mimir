@@ -54,10 +54,10 @@ export default {
 	},
 
 	view_status: function(): MithrilChild {
-		if (socket.authed)       return ['Logged in as ', m('span.user', socket.user || '<somebody>'), '.'];
-		if (socket.connected)    return this.$submit ? ['Logging in...'] : m('span.error', this.$error);
 		if (socket.connecting)   return ['Connecting...'];
 		if (socket.disconnected) return ['Reconnecting in ', socket.reconnect_wait.toFixed(1), 's...'];
+		if (socket.authed)       return ['Logged in as ', m('span.user', socket.user || '<somebody>'), '.'];
+		if (socket.connected)    return this.$submit ? ['Logging in...'] : m('span.error', this.$error);
 		return ['Unknown status.'];
 	},
 	view_form: function(): MithrilChild {
