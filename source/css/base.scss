@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+@import '~normalize.css/normalize';
+
+@import 'parts/parts';
+@import 'panels/panels';
+
+html {
+	font: 10pt/1 'Segoe UI';
+}
+
+body {
+	display: flex;
+	flex-flow: column nowrap;
+	height: 100vh;
+
+	> * { flex: 0 0 auto; }
+	> main { flex: 1; }
+	> .data-panel { flex: 1; }
+}
+
+main {
+	display: flex;
+	// flex-flow: column nowrap;
+
+	> .data-panel { flex: 1; }
+}

@@ -1,0 +1,30 @@
+@import '_vars';
+
+h1, h2 {
+	margin: 0;
+	line-height: 2;
+	font: { size: 2em; weight: 600; }
+}
+
+pre, samp, kbd {
+	font-family: $font_mono;
+	white-space: pre;
+	-webkit-tab-size: 2;
+	-moz-tab-size: 2;
+	tab-size: 2;
+}
+
+input {
+	padding: 0 $len_pad;
+	line-height: 2;
+	border: 1px solid #999;
+	background: transparent;
+	color: inherit;
+}
+
+.spacer { flex: 1; }
+.error { color: $clr_error; }
+
+
+@import 'button';
+@import 'toolbar';

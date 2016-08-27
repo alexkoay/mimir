@@ -1,0 +1,9 @@
+@import '_vars';
+
+.error-panel {
+	background: #fcfcfc;
+	color: $clr_error;
+	padding: 1em $len_margin;
+	font-family: $font_mono;
+	white-space: pre;
+}

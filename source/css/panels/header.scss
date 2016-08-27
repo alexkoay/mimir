@@ -1,0 +1,28 @@
+@import '_vars';
+
+.header-panel {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: baseline;
+	white-space: pre;
+
+	padding: 0 $len_margin;
+
+	> nav {
+		flex: 1;
+		padding: 0 $len_margin;
+	}
+	> nav ul {
+		margin: 0; padding: 0;
+		list-style: none;
+	}
+	> nav ul li { display: inline; }
+
+	> nav button {
+		padding: 2.5em 1em 1.25em;
+		text-transform: uppercase;
+		
+		&:hover, &:focus { background: lighten($clr_btn_light, 25%); color: #fff; } 
+		&.selected { background: $clr_btn_light; color: #fff; }
+	}
+}

@@ -1,0 +1,39 @@
+@import '_vars';
+
+.toolbar {
+	display: flex;
+	white-space: pre;
+	align-items: baseline;
+
+	background: #eee;
+
+	> * { padding: 0 ($len_pad*2); }
+
+	> button,
+	> input {
+		outline: 0;
+		border: 0;
+		line-height: 2.5;
+	}
+
+	> input {
+		min-width: 20em;
+		&:hover, &:focus { background: #ddd; }
+	}
+
+	> .title { font-weight: 600; }
+
+	> input,
+	> .title { flex: 1; }
+
+	// > button {
+	// 	&:hover, &:focus { background: $clr-tool-light; }
+	// 	&:active { background: $clr-tool-dark; }
+	// }
+
+	// .-theme-dark & {
+	// 	background: #335;
+	// 	color: #ccf;
+	// 	.error { color: $clr-error-light; }
+	// }
+}

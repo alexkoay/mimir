@@ -1,0 +1,44 @@
+@import '_vars';
+
+.list-panel {
+	> ul {
+		margin: 0;
+		padding: ($len_spacing*2) $len_margin;
+		list-style: none;
+		columns: 20rem;
+	}
+	> ul li {
+		break-inside: avoid;
+		padding: $len_spacing/2 0;
+	}
+	> ul li.item {
+		display: flex;
+		overflow: hidden;
+
+		&:last-child { margin: 0; }
+
+		> .content {
+			flex: 1; padding: $len_pad $len_pad*2;
+			background: #f3f3f3;
+			border-radius: $len_rad;
+		}
+		> .load, .delete {
+			padding: $len_pad;
+			color: #fff;
+		}
+		> .load {
+			background: $clr_success_light;
+			border-radius: $len_rad 0 0 $len_rad;
+			&:hover, &:focus { background: $clr_success; }
+		}
+		> .delete {
+			background: $clr_error_light;
+			border-radius: 0 $len_rad $len_rad 0;
+			&:hover, &:focus { background: $clr_error; }
+		}
+
+		&.selected .content {
+			background: #ffc;
+		}
+	}
+}

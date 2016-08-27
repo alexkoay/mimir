@@ -1,7 +1,6 @@
 syntax: glob
 
+env
 node_modules
-*.lnk
-*.bat
-mimir.js
-mimir.reports.js
+__pycache__
+static

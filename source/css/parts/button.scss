@@ -1,0 +1,34 @@
+@import '_vars';
+
+button {
+	background: transparent;
+	color: inherit;
+
+	cursor: pointer;
+	padding: $len_pad ($len_pad/2);
+	border: 0 solid;
+
+	line-height: 1;
+	color: $clr_btn_light;
+
+	&:focus,
+	&:hover
+		{ background: $clr_btn_light; color: #fff; }
+
+	&:active { background: $clr_btn_dark; color: #fff; }
+
+	&:disabled {
+		&, &:focus, &:hover, &:active {
+			cursor: inherit;
+			background: transparent;
+			color: #999;
+		}
+	}
+
+	&.-mini {
+		line-height: 2;
+		padding: 0 $len_pad;
+		border: 1px solid;
+		border-radius: $len_rad;
+	}
+}

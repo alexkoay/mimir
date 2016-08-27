@@ -1,0 +1,9 @@
+
+.data-panel {
+	display: flex;
+	flex-flow: column nowrap;
+
+	> * { flex: 0 0 auto; }
+	> .error-panel { flex: 1; }
+	> .table-panel { flex: 1 1 10vh; }
+}

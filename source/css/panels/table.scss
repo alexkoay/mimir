@@ -1,0 +1,65 @@
+@import '_vars';
+
+.table-panel {
+	display: flex;
+	flex-flow: column nowrap;
+
+	> * { flex: 0 0 auto; }
+	> .header-container {
+		overflow: hidden;
+		border: 1px solid #999;
+		border-left: 0; border-right: 0;
+
+		.header {
+			table-layout: fixed;
+			th, td { border: { top: 0; bottom: 0 }; }
+		}
+	}
+	> .data-container {
+		flex: 1;
+		position: relative;
+		overflow: auto;
+		display: flex;
+		flex: 1 1 10vh;
+
+		.data { width: 100%; }
+	}
+
+	table {
+		border-spacing: 0;
+		border-collapse: collapse;
+		line-height: 1.5;
+		white-space: pre;
+
+		th, td {
+			border: 1px solid #999;
+			&:first-child { border-left: 0; }
+			&:last-child { border-right: 0; }
+		}
+
+		thead {
+			line-height: 2;
+			th, td { padding: 0 1em; }
+			.name { font-weight: 600; }
+			.type {
+				font-size: 0.8em;
+				text-align: center;
+			}
+			.type { display: none; }
+		}
+
+		tbody {
+			line-height: 2;
+			tr.row.even { background: #eee; }
+			td {
+				padding: 0.1em $len_spacing*2;
+
+				&.bpchar, &.date, &.time { text-align: center; }
+				&.int4, &.numeric { text-align: right; }
+				span.more { float: right; }
+
+				&:last-child { width: 100%; }
+			}
+		}
+	}
+}

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "jsx": "preserve",
+        "allowSyntheticDefaultImports": true,
+        "target": "es6",
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "outDir": "build/"
+    },
+    "files": [
+		"./source/js/base.ts",
+        "./source/js/export/xlsx.ts",
+        "./typings/index.d.ts",
+		"./typings/other.d.ts"
+	],
+    "filesGlob": [
+        "./source/js/**/*.ts",
+        "./source/js/**/*.tsx"
+    ]
+}

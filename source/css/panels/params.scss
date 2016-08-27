@@ -1,0 +1,21 @@
+@import '_vars';
+
+.params-panel {
+	padding: $len_spacing $len_margin;
+	columns: 20em;
+	column-gap: $len_margin;
+
+	background: #fcfcfc;
+}
+
+.variable {
+	display: flex;
+	align-items: baseline;
+
+	> label {
+		padding-right: $len-spacing;
+		line-height: 3;
+	}
+	> input { flex: 1; }
+	> .required { background: lighten($clr_error_light, 25%); }
+}

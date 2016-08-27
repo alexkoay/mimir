@@ -1,0 +1,15 @@
+@import '_vars';
+
+.auth-panel {
+	> * { display: inline; }
+
+	> .status { padding-right: $len_pad; }
+	> .status .user { font-weight: 700; }
+
+	> form input {
+		border-radius: $len_rad;
+		margin-right: $len_pad;
+		width: 8em;
+		&[type=checkbox] { width: auto; }
+	}
+}
