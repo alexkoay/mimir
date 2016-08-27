@@ -1,9 +1,11 @@
 import json
+import asyncio
+import logging
+import traceback
 import psycopg2 as pg
 import websockets as ws
 import concurrent.futures as futures
 
-import asyncio
 from . import auth
 from .data import enc, dec
 
@@ -13,6 +15,8 @@ class Error(Exception):
 
 
 class Session:
+    count = 0
+    log = logging.getLogger('mimir.session')
     auth = None
 
     @classmethod
@@ -27,6 +31,9 @@ class Session:
     ## instance ##############################################################
 
     def __init__(self, socket):
+        Session.count += 1
+        self._id = Session.count
+
         self._socket = socket
         self._key = None
         self._types = { }
@@ -60,6 +67,7 @@ class Session:
     ## loop ##################################################################
 
     async def run(self):
+        self.log.info('(%s) Connected to %s', self._id, self._socket.remote_address[0])
         error = False
         done, self._pending = set(), set([self.login()])
         while not error and self._pending:
@@ -76,12 +84,14 @@ class Session:
                     error = True
                 except Exception as e:
                     error = True
-                    print('! encountered critical error', task, type(e), e)
-                    import traceback
-                    traceback.print_exc()
+                    self.log.error('(%s) Encountered critical error: %s', self._id, e)
+                    self.log.debug('(%s) Traceback\n%s', self._id, traceback.format_exc())
         self._socket.close()
 
+
     async def cleanup(self, exc_type, exc_val, traceback):
+        self.log.info('(%s) Cleaning up', self._id)
+
         # cancel outstanding queries
         if self._query:
             self._pending.update([self.cancel(token) for token in self._query])
@@ -98,11 +108,10 @@ class Session:
                     if isinstance(out, list): self._pending.update(out)
                 except ws.ConnectionClosed: pass
                 except futures.TimeoutError:
-                    print('! task took too long to clean up', task)
+                    self.log.debug('(%s) Task took too long to clean up: %s', self._id, task)
                 except Exception as e:
-                    print('! encountered cleanup error', task, type(e), e)
-                    import traceback
-                    traceback.print_exc()
+                    self.log.error('(%s) Encountered cleanup error: %s', self._id, e)
+                    self.log.error('(%s) Traceback\n%s', self._id, traceback.format_exc())
 
         if self._key is not None:
             Session.auth.logout(self._key)
@@ -183,7 +192,7 @@ class Session:
                 await self.send('{}{}:{}'.format(cmd, token, output if isinstance(output, str) else enc.encode(output)))
 
         except Error as e:
-            print('! route error', type(e), e)
+            self.log.info('(%s:%s) Error: %s', self._id, token, e)
             await self.send('{}{}:!{}'.format(cmd, token, e))
         except Exception as e:
             await self.send('{}{}:!Unknown error occured'.format(cmd, token, e))
@@ -238,6 +247,9 @@ class Session:
         if token in self._query:
             raise Error('Token is used for another outstanding query')
 
+        self.log.info('(%s:%s) Query: %s', self._id, token, query)
+        if params: self.log.info('(%s:%s) Params: %s', self._id, token, params)
+
         try:
             self._query[token] = { }
 
@@ -257,6 +269,7 @@ class Session:
             await cur.execute(query, params)
 
             # announce completion
+            self.log.info('(%s:%s) Retrieved %s rows', self._id, token, cur.rowcount)
             self._query[token]['total'] = cur.rowcount
             self._query[token]['fetch'] = 0
             self._query[token]['status'] = 3
@@ -276,11 +289,7 @@ class Session:
             elif isinstance(e, futures.CancelledError):
                 raise Error('Query task cancelled')
             else:
-                print('! unknown query error', type(e))
-                print('  error:', e)
-                print('  query:', query)
-                print('  params:', params)
-                raise
+                self.log.error('(%s:%s) Unknown query error of type %s: %s', self._id, token, type(e), e)
 
 
     async def status(self, tokens=None):
@@ -320,6 +329,7 @@ class Session:
         else:
             await self.release(meta['conn'], meta['cur'])
 
+        self.log.info('(%s:%s) Delivered %s rows', self._id, token, meta['fetch'])
         return data
 
 

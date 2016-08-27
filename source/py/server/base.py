@@ -1,3 +1,4 @@
+import logging
 import websockets as ws
 from .session import Session
 
@@ -17,6 +18,12 @@ async def handler(socket, path):
         print('! unknown error')
 
 
-async def run(opts, conn_opts):
-    await Session.connect(opts, conn_opts)
-    return await ws.serve(handler, 'localhost', 8765)
+async def run(server, auth, conn):
+    log = logging.getLogger('mimir')
+
+    await Session.connect(auth, conn)
+    log.warning('Authenticator connected successfully')
+
+    srv = await ws.serve(handler, **server)
+    log.warning('Listening on ws://{}:{}/'.format(server['host'], server['port']))
+    return srv
