@@ -32,14 +32,17 @@ export default {
 		var state = store.getState();
 		if (state.view === 'reports') return m(List.get('reports'));
 		if (state.view === 'saved')   return m(List.get('saved'));
-		return [m(Query), m(Data, {data: state.data.current})];
+		return null;
 	},
 
 	view: function(n: MithrilVNode) {
 		var state = store.getState();
+		var page = this.page(state.view);
 		return [
 			m(Header),
-			this.page(state.view),
+			m(Query, {class: page !== null ? 'remove' : ''}),
+			m(Data, {data: state.data.current, class: page !== null ? 'remove' : ''}),
+			page,
 		];
 	}
 };

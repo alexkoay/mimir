@@ -24,7 +24,7 @@ input {
 
 .spacer { flex: 1; }
 .error { color: $clr_error; }
-
+.remove { display: none !important; }
 
 @import 'button';
 @import 'toolbar';

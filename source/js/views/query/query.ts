@@ -15,7 +15,7 @@ export default {
 	view: function(n: MithrilVNode) {
 		var state = store.getState().editor;
 		return m('div.query-panel',
-			{ class: state.hide ? 'hide' : '' },
+			{ class: n.attrs.class + ' ' + (state.hide ? 'hide' : '') },
 			!state.hide ? m(Editor) : null,
 			m('div.toolbar',
 				m('button', {onclick: this.hide}, state.hide ? 'Show' : 'Hide'),
