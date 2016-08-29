@@ -1,6 +1,5 @@
 syntax: glob
 
-env
+pyenv
 node_modules
 __pycache__
-static
