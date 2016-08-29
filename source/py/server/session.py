@@ -290,6 +290,7 @@ class Session:
                 raise Error('Query task cancelled')
             else:
                 self.log.error('(%s:%s) Unknown query error of type %s: %s', self._id, token, type(e), e)
+                raise e
 
 
     async def status(self, tokens=None):
