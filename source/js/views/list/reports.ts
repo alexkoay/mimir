@@ -4,7 +4,7 @@ import List from './list';
 export default {
 	refresh: function() {
 		this.context.raw('*', '')
-			.then((data: any) => this.data = data)
+			.then((data: any) => { this.data = data; this.data.sort((d: any[]) => [d[1], d[0]]); })
 			.then(m.redraw);
 	},
 

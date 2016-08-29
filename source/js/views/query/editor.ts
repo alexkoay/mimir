@@ -13,6 +13,7 @@ export default {
 			lineNumbers: true,
 			mode: 'text/x-pgsql',
 			theme: 'blackboard',
+			indentUnit: 4,
 			indentWithTabs: true,
 			lineWrapping: true,
 			extraKeys: {
