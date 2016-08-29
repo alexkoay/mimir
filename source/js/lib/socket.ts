@@ -34,12 +34,13 @@ export default class Socket {
 
 // properties ////////////////////////////////////////////////////////////////
 
-	get disconnected(): boolean { return this.$conn === null || this.$conn.readyState > 1; }
-	get reconnect_wait(): number { return this.$reconnect.wait; }
-	get connecting(): boolean { return (this.$conn && this.$conn.readyState < 1) || false; }
-	get connected(): boolean { return (this.$conn && this.$conn.readyState == 1) || false; }
-	get authed(): boolean { return this.$auth.state; }
-	get user(): string { return this.authed ? this.$auth.user : null; }
+	get disconnected() { return this.$conn === null || this.$conn.readyState > 1; }
+	get reconnect_wait() { return this.$reconnect.wait; }
+	get connecting() { return (this.$conn && this.$conn.readyState < 1) || false; }
+	get connected() { return (this.$conn && this.$conn.readyState == 1) || false; }
+	get authing() { return this.$auth.promise !== null; }
+	get authed() { return this.$auth.state; }
+	get user() { return this.authed ? this.$auth.user : null; }
 
 // methods ///////////////////////////////////////////////////////////////////
 
@@ -64,7 +65,6 @@ export default class Socket {
 		if (this.$auth && this.$auth.promise) { this.$auth.promise.fail(null); }
 		this.$auth.state = false;
 		this.$auth.promise = null;
-
 
 		// remove pending queries and force resend
 		this.$queue = [];
@@ -109,8 +109,9 @@ export default class Socket {
 // handlers //////////////////////////////////////////////////////////////////
 
 	private _onopen() {
-		window.setTimeout(() => this.onchange('connected'), 0);
+		this.$reconnect.reset();
 		this._flush();
+		window.setTimeout(() => this.onchange('connected'), 0);
 	}
 
 	private _onclose() {

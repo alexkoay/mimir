@@ -35,7 +35,7 @@ export default {
 	onsubmit: function(n: MithrilVNode, e: Event) {
 		e.preventDefault();
 		if (!socket.connected) { socket.connect(true); }
-		else if (!socket.authed && !this.$submit) {
+		else if (!socket.authed && !(socket.authing || this.$submit)) {
 			var form = (<HTMLFormElement> e.target);
 			var username = (<HTMLInputElement> form.elements.namedItem('username')).value,
 				password = (<HTMLInputElement> form.elements.namedItem('password')).value,
@@ -63,12 +63,12 @@ export default {
 	view_form: function(): MithrilChild {
 		if (!socket.connected)  return m('button.-mini', {type: 'submit'}, 'Reconnect');
 		else if (socket.authed) return m('button.-mini', {type: 'submit'}, 'Logout');
-		else if (this.$submit)  return m('button.-mini', {type: 'submit'}, 'Cancel')
+		else if (socket.authing || this.$submit)  return m('button.-mini', {type: 'submit'}, 'Cancel')
 		else return [
-			m('input', {name: 'username', placeholder: 'Username', disabled: this.$submit}),
-			m('input', {name: 'password', type: 'password', placeholder: 'Password', disabled: this.$submit}),
+			m('input', {name: 'username', placeholder: 'Username'}),
+			m('input', {name: 'password', type: 'password', placeholder: 'Password'}),
 			m('input', {name: 'remember', type: 'checkbox'}),
-			m('button.-mini', {type: 'submit', disabled: this.$submit}, 'Login')
+			m('button.-mini', {type: 'submit'}, 'Login')
 		];
 	},
 	view: function(n: MithrilVNode) {

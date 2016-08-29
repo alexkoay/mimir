@@ -67,7 +67,7 @@ class Session:
     ## loop ##################################################################
 
     async def run(self):
-        self.log.info('(%s) Connected to %s', self._id, self._socket.remote_address[0])
+        self.log.info('(%s) Connected to %s', self._id, self._socket.request_headers.get('X-Real-IP', self._socket.remote_address[0]), '({})'.format(self._socket.request_headers.get('User-Agent', 'unknown')))
         error = False
         done, self._pending = set(), set([self.login()])
         while not error and self._pending:
