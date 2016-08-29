@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 
 export type ColumnDefinition = [string, string];
 
@@ -54,7 +55,7 @@ export default class DataSet {
 
 		offset += 1e5;
 		if (offset < this.count) {
-			window.setTimeout(this._export.bind(this, worker, offset), 0);
+			defer(this._export.bind(this, worker, offset));
 		}
 		else {
 			worker.postMessage({type: 'start'});

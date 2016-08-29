@@ -1,4 +1,4 @@
-import debounce from 'lodash/debounce';
+import defer from 'lodash/defer';
 import DataSet from '../../lib/dataset';
 import Viewport from './viewport';
 
@@ -17,37 +17,56 @@ export function get_string(val: any, type: string): string {
 }
 
 export default {
+	cache: function(n: MithrilVNode) {
+		var cols = (<DataSet> n.attrs.data).cols || [],
+			rows = (<DataSet> n.attrs.data).rows;
+
+		for (var i=this.$cache.length; i < rows.length; ++i) {
+			this.$cache.push(rows[i].map((col, j) => {
+				var full = get_string(col, cols[j][1]);
+				var lines = full.split('\n');
+				return [full, lines[0].trim(), lines.length > 1];
+			}));
+		}
+	},
+
 	resize: function(el: HTMLElement) {
 		var gcs = window.getComputedStyle;
 
 		// measure header height
 		var head = el.querySelector('table.data thead');
-		this.$header = parseFloat(gcs(head).height);
-
-		// measure row height
 		var row = el.querySelector('table.data tbody tr.row');
+		var height = el.clientHeight;
+
+		this.$header = parseFloat(gcs(head).height);
 		this.$height = parseFloat(gcs(row).height);
 
 		// measure viewport
-		var count = Math.ceil(el.clientHeight / this.$height) || 100;
+		var count = Math.ceil(height / this.$height) || 100;
 		if (this.$view.show != count) { this.$view.show = count; }
 
-		requestAnimationFrame(m.redraw);
+		defer(m.redraw);
 	},
 	scroll: function(el: HTMLElement) {
 		var gcs = window.getComputedStyle;
 
-		// match table width
-		var srct = el.querySelector('table.data');
-		var dstt = el.querySelector('table.header');
-		(<HTMLElement> dstt).style.width = gcs(srct).width;
+		// get elements
+		var tsrc = el.querySelector('table.data');
+		var tdst = el.querySelector('table.header');
 
-		// match column width
-		var src = el.querySelectorAll('table.data th');
-		var dst = el.querySelectorAll('table.header th');
-		for (var i=0; i<src.length; ++i) {
-			(<HTMLElement> dst[i]).style.width = gcs(src[i]).width;
-		}
+		var hsrc = el.querySelectorAll('table.data th');
+		var hdst = el.querySelectorAll('table.header th');
+
+		// get widths
+		var twidth = gcs(tsrc).width;
+		var hwidths: string[] = [];
+		for (var i=0; i<hsrc.length; ++i) { hwidths.push(gcs(hsrc[i]).width); }
+
+		(<HTMLElement> tdst).style.width = twidth;
+		hwidths.forEach((w, i) => {
+			var ow = (<HTMLElement> hdst[i]).style.width;
+			if (ow != w) { (<HTMLElement> hdst[i]).style.width = w; }
+		});
 	},
 
 	onscroll: function(e: Event) {
@@ -58,6 +77,7 @@ export default {
 	oninit: function(n: MithrilVNode) {
 		this.$view = new Viewport();
 		this.$view.size = n.attrs.data.rows.length;
+		this.$cache = [];
 	},
 	onbeforeupdate: function(n: MithrilVNode) {
 		this.$view.size = n.attrs.data.rows.length;
@@ -68,13 +88,15 @@ export default {
 		this.scroll(n.dom);
 		window.addEventListener('resize', this.resize.bind(this, n.dom));
 	},
-	onupdate: function(n: MithrilVNode) { this.scroll(n.dom); },
+	onupdate: function(n: MithrilVNode) { defer(() => this.scroll(n.dom)); },
 	view: function(n: MithrilVNode) {
+		this.cache(n);
 		var cols = (<DataSet> n.attrs.data).cols || [],
 			rows = (<DataSet> n.attrs.data).rows;
 
 		var view: Viewport = this.$view;
-		var data = rows.slice(view.first, view.last);
+		// var data = rows.slice(view.first, view.last);
+		var data: [string, string, boolean][][] = this.$cache.slice(view.first, view.last);
 
 		return m('div.table-panel',
 			m('div.header-container',
@@ -83,7 +105,7 @@ export default {
 					m('thead',
 						m('tr.name', m('th', '#'), cols.map(col => m('th', {class: col[1]}, col[0])), m('th')),
 						m('tr.type', m('td', ''), cols.map(col => m('td', {class: col[1]}, col[1])), m('td'))
-					),
+					)
 				)
 			),
 			m('div.data-container',
@@ -101,13 +123,10 @@ export default {
 								class: (i+view.first) % 2 == 0 ? 'even' : 'odd'
 							},
 							m('td.int4', m('div', i+view.first+1)),
-							row.map((col, j) => {
-								var full = get_string(col, cols[j][1]);
-								var lines = full.split('\n');
-								return m('td', 
-									{class: cols[j][1], title: full},
-									m('div', lines.length > 1 ? m('span.more', '\u2026') : null, lines[0].trim()));
-							}),
+							row.map((col, j) => m('td',
+								{class: cols[j][1], title: col[0]},
+								m('div', col[2] ? m('span.more', '\u2026') : null, col[1])
+							)),
 							m('td'))),
 						m('tr.after', {style: {height: (view.after * this.$height) + 'px' } })
 					)

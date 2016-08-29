@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import Socket, { Context } from './socket';
 import DataSet, { ColumnDefinition } from './dataset';
 
@@ -71,14 +72,14 @@ export default class Query extends DataSet {
 		this._end(-1);
 		this.context.cancel();
 
-		window.setTimeout(() => this.onchange(this, 'cancel'), 0);
+		defer(() => this.onchange(this, 'cancel'));
 	}
 
 	private _fail(msg: string) {
 		if (!this.cancelled) {
 			this._end(-1);
 			this.$error = msg;
-			window.setTimeout(() => this.onchange(this, 'error'), 0);
+			defer(() => this.onchange(this, 'error'));
 		}
 	}
 	private _process(meta: [number, ColumnDefinition[]]) {
@@ -87,7 +88,7 @@ export default class Query extends DataSet {
 		this.meta(meta[1]);
 		this.format = meta[1].map(m => transform[m[1]] || transform['_']);
 
-		window.setTimeout(() => this.onchange(this, 'process'), 0);
+		defer(() => this.onchange(this, 'process'));
 	}
 	private _retrieve() {
 		if (this.cancelled) { return; }
@@ -110,7 +111,7 @@ export default class Query extends DataSet {
 		this.$buffer = Math.min(Math.max(100, Math.floor(this.$buffer * 0.3 + rows.length / wait / 2 * 0.7)), 400000);
 
 		// trigger events
-		window.setTimeout(() => this.onchange(this, 'data'), 0);
+		defer(() => this.onchange(this, 'data'));
 	}
 	private _end(status: number) {
 		this.$status = status;
@@ -119,6 +120,6 @@ export default class Query extends DataSet {
 
 	private _status() {
 		this.$status = this.context.status || 0;
-		window.setTimeout(() => this.onchange(this, 'status'), 0);
+		defer(() => this.onchange(this, 'status'));
 	}
 }

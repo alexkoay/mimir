@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import DataSet from '../../lib/dataset';
 import store from '../../store';
 import List from './list';
@@ -15,7 +16,7 @@ export default {
 		this.data.insert(Object.keys(window.localStorage)
 			.filter((key: string) => key.startsWith('query/'))
 			.map((key: string) => [key.substring(6), window.localStorage.getItem(key)]));
-		requestAnimationFrame(m.redraw);
+		defer(m.redraw);
 	},
 
 	oninit: function(n: MithrilVNode) {

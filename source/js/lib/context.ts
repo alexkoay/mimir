@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import isEmpty from 'lodash/isEmpty';
 import Timer from './timer';
 import Socket from './socket';
@@ -95,11 +96,11 @@ export default class Context {
 	receive(cmd: string, error: boolean, data: any) {
 		switch (cmd) {
 			case '=':
-				window.setTimeout(this.onstatus.bind(this, data), 0);
+				defer(this.onstatus.bind(this, data));
 				this.$status = data[this.$token];
 				break;
 			default:
-				window.setTimeout((error ? this.$query_p.fail : this.$query_p.ok).bind(this, data), 0);
+				defer((error ? this.$query_p.fail : this.$query_p.ok).bind(this, data));
 				this.$query = null;
 				this.$query_p = null;
 				this.$timer.cancel();

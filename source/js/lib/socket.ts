@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import Timer from './timer';
 import Context from './context';
 
@@ -55,7 +56,7 @@ export default class Socket {
 		}
 
 		// connect websocket
-		window.setTimeout(() => this.onchange('connecting'), 0);
+		defer(() => this.onchange('connecting'));
 		this.$conn = new WebSocket(this.$url);
 		this.$conn.onopen = this._onopen.bind(this);
 		this.$conn.onmessage = this._onmessage.bind(this);
@@ -111,13 +112,13 @@ export default class Socket {
 	private _onopen() {
 		this.$reconnect.reset();
 		this._flush();
-		window.setTimeout(() => this.onchange('connected'), 0);
+		defer(() => this.onchange('connected'));
 	}
 
 	private _onclose() {
 		var delay = Math.random() * fib[Math.min(this.$reconnect.retries, fib.length - 1)];
 		this.$reconnect.schedule(delay);
-		window.setTimeout(() => this.onchange('disconnected'), 0);
+		defer(() => this.onchange('disconnected'));
 	}
 
 	private _onmessage(msg: {data: string; type: string; target: WebSocket}) {
@@ -127,14 +128,14 @@ export default class Socket {
 				if (msg.data[2] == '!') {
 					this.$auth.promise.fail(msg.data.slice(3));
 					this.$auth.promise = null;
-					window.setTimeout(() => this.onchange('denied'), 0);
+					defer(() => this.onchange('denied'), 0);
 				}
 				return;
 			}
 			if (this.$auth.promise) { this.$auth.promise.ok(); }
 			this.$auth.promise = null;
 			this.$auth.state = true;
-			window.setTimeout(() => this.onchange('authed'), 0);
+			defer(() => this.onchange('authed'));
 			this._flush();
 		}
 		else {
