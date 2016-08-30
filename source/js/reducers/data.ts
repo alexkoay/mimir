@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import socket from '../socket';
 import Query from '../lib/query';
 
@@ -50,7 +51,7 @@ export default function(state: State, action: Action): State {
 			}
 
 			state.current = new Query(socket, action.name, action.query, action.args);
-			state.current.onchange = () => m.redraw();
+			state.current.onchange = () => defer(m.redraw);
 			state.current.query();
 			break;
 

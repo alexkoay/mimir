@@ -5,7 +5,7 @@ export default {
 	refresh: function() {
 		this.context.raw('*', '')
 			.then((data: any) => { this.data = data; this.data.sort((l: any[], r: any[]) => l[1] <= r[1] ? -1 : 1); })
-			.then(m.redraw);
+			.then(() => defer(m.redraw));
 	},
 
 	oninit: function(n: MithrilVNode) {
