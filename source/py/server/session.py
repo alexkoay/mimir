@@ -71,7 +71,7 @@ class Session:
         error = False
         done, self._pending = set(), set([self.login()])
         while not error and self._pending:
-            (done, self._pending) = await asyncio.wait(self._pending, return_when=futures.FIRST_COMPLETED, timeout=60)
+            (done, self._pending) = await asyncio.wait(self._pending, return_when=futures.FIRST_COMPLETED, timeout=30)
 
             if not done:
                 self._pending.add(self.ping())
