@@ -1,4 +1,8 @@
-importScripts(location.href + '/static/lib/xlsx.core.min.js');
+var pathArr = location.href.split('/');
+pathArr.pop();
+var path = pathArr.join('/');
+
+importScripts(path + '/lib/xlsx.core.min.js');
 
 type Column = [string, string];
 type Row = any[];
