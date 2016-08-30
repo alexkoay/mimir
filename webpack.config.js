@@ -1,16 +1,19 @@
 var path = require('path');
 var webpack = require('webpack');
 
-var extract = require('extract-text-webpack-plugin');
-var styles = new extract('base.css');
+var extract = require('extract-text-webpack-plugin'),
+	autoprefixer = require('autoprefixer'),
+	visualizer = require('webpack-visualizer-plugin');
 
-var autoprefixer = require('autoprefixer');
-var visualizer = require('webpack-visualizer-plugin');
+// plugins
+var styles = new extract('base.css'),
+	replace = new webpack.ContextReplacementPlugin(/moment[\\\/]locale$/, /^\.\/(en-gb)$/),
+	stats = new visualizer({filename: './statistics.html'});
 
 module.exports = {
 	entry: {
 		'base': './source/js/base',
-		'export.xlsx': './source/js/export/xlsx'
+ 		'export.xlsx': './source/js/export/xlsx'
 	},
 	resolve: {
 		extensions: ['', '.js', '.ts', '.jsx', '.tsx'],
@@ -31,28 +34,38 @@ module.exports = {
 			{ test: /\.s?css$/, loader: styles.extract('css!postcss!sass') }
 		]
 	},
-	plugins: [
-		styles,
-		new webpack.ContextReplacementPlugin(/moment[\\\/]locale$/, /^\.\/(en-gb)$/),
-		new visualizer({filename: './statistics.html'})
-	],
+	plugins: [ styles, replace, stats ],
 	postcss: [ autoprefixer({ browsers: ['last 2 versions'] }) ],
 	devServer: {
 		historyApiFallback: true,
 		noInfo: true,
 		hot: false,
 	},
-	devtool: '#eval-source-map'
+	devtool: '#eval-source-map',
 }
 
-if (process.env.NODE_ENV === 'production') {
+if (process.argv.indexOf('-p') >= 0) {
 	module.exports.devtool = '#source-map';
 	module.exports.plugins = (module.exports.plugins || []).concat([
 		new webpack.DefinePlugin({
 			'process.env': { NODE_ENV: '"production"' }
 		}),
-		new webpack.UglifyJsPlugin({ comments: false }),
-		new webpack.LoaderOptionsPlugin({ minimize: true, debug: false }),
+		new webpack.optimize.UglifyJsPlugin({
+			minimize: true,
+			debug: false,
+			comments: false,
+			mangle: true,
+			compress: {
+				sequences: true,
+				dead_code: true,
+				conditionals: true,
+				booleans: true,
+				unused: true,
+				if_return: true,
+				join_vars: true
+			},
+			sourceMap: true
+		}),
 		new webpack.optimize.OccurenceOrderPlugin()
 	])
 }
