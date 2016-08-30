@@ -62,7 +62,8 @@ if (process.argv.indexOf('-p') >= 0) {
 				booleans: true,
 				unused: true,
 				if_return: true,
-				join_vars: true
+				join_vars: true,
+				warnings: false
 			},
 			sourceMap: true
 		}),
