@@ -90,13 +90,13 @@ export default {
 	},
 	onupdate: function(n: MithrilVNode) { defer(() => this.scroll(n.dom)); },
 	view: function(n: MithrilVNode) {
-		this.cache(n);
+		// this.cache(n);
 		var cols = (<DataSet> n.attrs.data).cols || [],
 			rows = (<DataSet> n.attrs.data).rows;
 
 		var view: Viewport = this.$view;
-		// var data = rows.slice(view.first, view.last);
-		var data: [string, string, boolean][][] = this.$cache.slice(view.first, view.last);
+		var data = rows.slice(view.first, view.last);
+		// var data: [string, string, boolean][][] = this.$cache.slice(view.first, view.last);
 
 		return m('div.table-panel',
 			m('div.header-container',
