@@ -55,6 +55,7 @@ if (process.argv.indexOf('-p') >= 0) {
 			debug: false,
 			comments: false,
 			mangle: true,
+			compress: { warnings: false },
 			sourceMap: true
 		}),
 		new webpack.optimize.OccurenceOrderPlugin()
