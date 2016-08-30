@@ -39,7 +39,7 @@ export default class DataSet {
 
 	export(type: string) {
 		this.$export = Date.now();
-		var worker = new Worker('/static/export.' + type + '.js');
+		var worker = new Worker(location.href + '/static/export.' + type + '.js');
 		worker.addEventListener('message', (e: {data: [Blob, string]}) => {
 			window.saveAs(e.data[0], e.data[1], false);
 			this.$export = 0;

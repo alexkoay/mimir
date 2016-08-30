@@ -1,4 +1,4 @@
-importScripts('/static/lib/xlsx.core.min.js');
+importScripts(location.href + '/static/lib/xlsx.core.min.js');
 
 type Column = [string, string];
 type Row = any[];
