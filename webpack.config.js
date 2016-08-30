@@ -55,16 +55,6 @@ if (process.argv.indexOf('-p') >= 0) {
 			debug: false,
 			comments: false,
 			mangle: true,
-			compress: {
-				sequences: true,
-				dead_code: true,
-				conditionals: true,
-				booleans: true,
-				unused: true,
-				if_return: true,
-				join_vars: true,
-				warnings: false
-			},
 			sourceMap: true
 		}),
 		new webpack.optimize.OccurenceOrderPlugin()
