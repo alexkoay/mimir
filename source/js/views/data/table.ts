@@ -16,17 +16,31 @@ export function get_string(val: any, type: string): string {
 	else { return val.toString(); }
 }
 
+function build_row(cols: [string, string][], row: any[], offset: number) {
+	return m('tr.row',
+		{	key: offset,
+			class: offset % 2 == 0 ? 'even' : 'odd'
+		},
+		m('td.int4', m('div', offset+1)),
+		row.map((col, j) => {
+			var full = get_string(col, cols[j][1]);
+			var lines = full.split('\n');
+			return m('td',
+				{class: cols[j][1], title: full},
+				m('div', lines.length > 1 ? m('span.more', '\u2026') : null, lines[0].trim())
+			);
+		}),
+		m('td')
+	);
+}
+
 export default {
 	cache: function(n: MithrilVNode) {
 		var cols = (<DataSet> n.attrs.data).cols || [],
 			rows = (<DataSet> n.attrs.data).rows;
 
 		for (var i=this.$cache.length; i < rows.length; ++i) {
-			this.$cache.push(rows[i].map((col, j) => {
-				var full = get_string(col, cols[j][1]);
-				var lines = full.split('\n');
-				return [full, lines[0].trim(), lines.length > 1];
-			}));
+			this.$cache.push(build_row(cols, rows[i], i));
 		}
 	},
 
@@ -118,16 +132,7 @@ export default {
 					),
 					m('tbody',
 						m('tr.before', {style: { height: (view.before * this.$height) + 'px' } }),
-						data.map((row, i) => m('tr.row',
-							{	key: i+view.first,
-								class: (i+view.first) % 2 == 0 ? 'even' : 'odd'
-							},
-							m('td.int4', m('div', i+view.first+1)),
-							row.map((col, j) => m('td',
-								{class: cols[j][1], title: col[0]},
-								m('div', col[2] ? m('span.more', '\u2026') : null, col[1])
-							)),
-							m('td'))),
+						data.map((row, i) => build_row(cols, row, i+view.first)),
 						m('tr.after', {style: {height: (view.after * this.$height) + 'px' } })
 					)
 				)
