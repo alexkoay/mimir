@@ -1,3 +1,4 @@
+import defer from 'lodash/defer';
 import socket from '../../socket';
 import List from './list';
 
