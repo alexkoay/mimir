@@ -276,7 +276,7 @@ class Session:
 
             if cur.description is None:
                 out = [cur.rowcount, None]
-                await self.release(meta['conn'], meta['cur'])
+                await self.release(conn, cur)
                 del self._query[token]
                 return out
             else:
