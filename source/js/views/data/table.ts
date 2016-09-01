@@ -12,7 +12,7 @@ export function get_string(val: any, type: string): string {
 			+ ' ' + ('00' + val.getHours()).slice(-2) + ':' + ('00' + val.getMinutes()).slice(-2) + ':' + ('00' + val.getSeconds()).slice(-2);
 	}
 	else if (type == 'interval') { 
-		return moment().add(val).fromNow();
+		return moment().add(val * 1000).fromNow();
 	}
 	else if (type == 'json' || type == 'jsonb') { return JSON.stringify(val); }
 	else { return val.toString(); }
