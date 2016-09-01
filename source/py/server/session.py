@@ -273,7 +273,11 @@ class Session:
             self._query[token]['total'] = cur.rowcount
             self._query[token]['fetch'] = 0
             self._query[token]['status'] = 3
-            return [cur.rowcount, [(col[0], self._types.get(col[1], 'text')) for col in cur.description]]
+
+            if cur.description is None:
+                return [cur.rowcount, None]
+            else:
+                return [cur.rowcount, [(col[0], self._types.get(col[1], 'text')) for col in cur.description]]
 
         except Exception as e:
             if token in self._query:

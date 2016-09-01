@@ -84,10 +84,17 @@ export default class Query extends DataSet {
 	}
 	private _process(meta: [number, ColumnDefinition[]]) {
 		this.$status = 3;
-		this.$count = meta[0];
-		this.meta(meta[1]);
-		this.format = meta[1].map(m => transform[m[1]] || transform['_']);
-
+		if (meta[1] === null) {
+			this.$count = 1;
+			this.meta([['@status', 'text']]);
+			this.format = meta[1].map(m => transform[m[1]] || transform['_']);
+			this.insert([['Affected ' + meta[0] + ' rows.']]);
+		}
+		else {
+			this.$count = meta[0];
+			this.meta(meta[1]);
+			this.format = meta[1].map(m => transform[m[1]] || transform['_']);
+		}
 		defer(() => this.onchange(this, 'process'));
 	}
 	private _retrieve() {
