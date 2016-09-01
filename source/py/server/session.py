@@ -275,7 +275,10 @@ class Session:
             self._query[token]['status'] = 3
 
             if cur.description is None:
-                return [cur.rowcount, None]
+                out = [cur.rowcount, None]
+                await self.release(meta['conn'], meta['cur'])
+                del self._query[token]
+                return out
             else:
                 return [cur.rowcount, [(col[0], self._types.get(col[1], 'text')) for col in cur.description]]
 
