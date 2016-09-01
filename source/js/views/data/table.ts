@@ -1,4 +1,6 @@
 import defer from 'lodash/defer';
+import moment from 'moment';
+
 import DataSet from '../../lib/dataset';
 import Viewport from './viewport';
 
