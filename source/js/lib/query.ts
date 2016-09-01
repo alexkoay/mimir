@@ -87,7 +87,7 @@ export default class Query extends DataSet {
 		if (meta[1] === null) {
 			this.$count = 1;
 			this.meta([['@status', 'text']]);
-			this.format = meta[1].map(m => transform[m[1]] || transform['_']);
+			this.format = [transform['_']];
 			this.insert([['Affected ' + meta[0] + ' rows.']]);
 		}
 		else {
