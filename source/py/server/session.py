@@ -266,7 +266,10 @@ class Session:
 
             # execute query
             self._query[token]['status'] = 2
-            await cur.execute(query, params)
+            try:
+                await cur.execute(query, params)
+            except KeyError as e:
+                raise Error('SQL error: {}'.format(str(e)))
 
             # announce completion
             self.log.info('(%s:%s) Retrieved %s rows', self._id, token, cur.rowcount)
@@ -287,6 +290,8 @@ class Session:
                 del self._query[token]
             await self.release(conn, cur)
 
+            if isinstance(e, Error):
+                raise
             if isinstance(e, pg.Error):
                 raise Error('SQL error: {}'.format(e))
             elif isinstance(e, futures.TimeoutError):
@@ -297,7 +302,7 @@ class Session:
                 raise Error('Query task cancelled')
             else:
                 self.log.error('(%s:%s) Unknown query error of type %s: %s', self._id, token, type(e), e)
-                raise e
+                raise
 
 
     async def status(self, tokens=None):
