@@ -14,6 +14,8 @@
 	> ul li.item {
 		display: flex;
 		overflow: hidden;
+		cursor: pointer;
+		user-select: none;
 
 		&:last-child { margin: 0; }
 
