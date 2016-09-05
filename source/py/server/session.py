@@ -138,7 +138,9 @@ class Session:
         # get type mapping
         async with self._context as conn:
             async with conn.cursor() as cur:
-                await cur.execute('SELECT oid, typname FROM pg_type')
+                query = '''SELECT t1.oid, coalesce(t2.typname || '[]', t1.typname) typname
+                    FROM pg_type t1 LEFT JOIN pg_type t2 ON t2.typarray = t1.oid'''
+                await cur.execute(query)
                 self._types = {oid: name for oid, name in (await cur.fetchall())}
 
         # continue to main loop

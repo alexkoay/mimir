@@ -6,6 +6,9 @@ import Viewport from './viewport';
 
 export function get_string(val: any, type: string): string {
 	if (val === null) { return '<blank>'; }
+	else if (type.endsWith('[]')) {
+		return '[' + (<any[]> val).map(v => get_string(v, type.slice(0, type.length-2))).join(', ') + ']';
+	}
 	else if (type == 'date') { return val.getFullYear().toString() + '-' + ('00' + (val.getMonth() + 1)).slice(-2) + '-' + ('00' + val.getDate()).slice(-2); }
 	else if (type == 'timestamptz') {
 		return val.getFullYear().toString() + '-' + ('00' + (val.getMonth() + 1)).slice(-2) + '-' + ('00' + val.getDate()).slice(-2)
