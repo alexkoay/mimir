@@ -93,7 +93,15 @@ export default class Query extends DataSet {
 		else {
 			this.$count = meta[0];
 			this.meta(meta[1]);
-			this.format = meta[1].map(m => transform[m[1]] || transform['_']);
+			this.format = meta[1].map(m => {
+				var type = m[1];
+				if (m[1].endsWith('[]')) {
+					type = type.slice(0, type.length - 2);
+					var trans = transform[type] || transform['_'];
+					return (val: any) => val.map(trans);
+				}
+				else { return transform[type] || transform['_']; }
+			});
 		}
 		defer(() => this.onchange(this, 'process'));
 	}
