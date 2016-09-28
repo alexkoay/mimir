@@ -26,14 +26,17 @@
 	> input,
 	> .title { flex: 1; }
 
-	// > button {
-	// 	&:hover, &:focus { background: $clr-tool-light; }
-	// 	&:active { background: $clr-tool-dark; }
-	// }
+	> button.main {
+		animation-name: mainpulse;
+		animation-duration: 2s;
+		animation-timing-function: linear;
+		// animation-fill-mode: forwards;
+		@keyframes mainpulse {
+			0% { }
+			50% { color: #000; background: hsl(270, 25%, 80%); border-radius: $len_rad*2; }
+		}
+		// 50% { color: darken(rgb(153, 204, 255), 50%); background: rgb(153, 204, 255); border-radius: $len_rad*2; }
 
-	// .-theme-dark & {
-	// 	background: #335;
-	// 	color: #ccf;
-	// 	.error { color: $clr-error-light; }
-	// }
+		&:hover { animation-name: none; }
+	}
 }

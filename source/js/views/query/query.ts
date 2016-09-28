@@ -19,7 +19,12 @@ export default {
 			!state.hide ? m(Editor) : null,
 			m('div.toolbar',
 				m('button', {onclick: this.hide}, state.hide ? 'Show' : 'Hide'),
-				m('button', {onclick: () => store.dispatch(execute()), disabled: state.executed || !state.query}, state.executed ? 'Ran' : 'Run'),
+				m('button.run',
+					{
+						class: state.executed || !state.query ? '' : 'main',
+						onclick: () => store.dispatch(execute()),
+						disabled: state.executed || !state.query
+					}, state.executed ? 'Ran' : 'Run'),
 				!state.hide ? [
 					m('button', {onclick: this.save, disabled: state.saved || !state.query}, state.saved ? 'Saved' : 'Save'),
 					m('input', {placeholder: 'Unnamed query', oninput: this.name, value: state.name})
