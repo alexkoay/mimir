@@ -13,7 +13,7 @@ export default class Viewport {
 	// size of rendered content (includes gap)
 	get block() { return this.show * this.gap; }
 	get before() { return this.first; }
-	get first() { return Math.max(this.offset - this.block, 0); }
-	get last() { return Math.min(this.offset + this.show + this.block, this.size); }
+	get first() { return Math.max(Math.floor(this.offset - this.block), 0); }
+	get last() { return Math.min(Math.ceil(this.offset + this.show + this.block), this.size); }
 	get after() { return this.size - this.last; }
 }
